@@ -26,6 +26,9 @@ export const isScenarioId = (v: string | null): v is ScenarioId =>
   v !== null && Object.hasOwn(SCENARIOS, v);
 
 export function readScenarioFromUrl(): ScenarioId {
+  // Guarded so the module is safe to render outside a browser (tests, and any
+  // static render). Without a URL to read, the demo default is the right answer.
+  if (typeof window === 'undefined') return 'live';
   const s = new URLSearchParams(window.location.search).get('s');
   return isScenarioId(s) ? s : 'live';
 }
