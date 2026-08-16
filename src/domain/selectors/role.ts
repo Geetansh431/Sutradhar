@@ -34,3 +34,41 @@ export const canSeeMoney = (state: RoleState): boolean => isAdmin(state);
 
 /** Money is not in a team member's navigation at all (§3.2). */
 export const canReachMoneyScreen = (state: RoleState): boolean => canSeeMoney(state);
+
+/**
+ * The rail's destinations, with the role cut already applied (§4.1, §3.2).
+ *
+ * Money is absent from a team member's navigation entirely — not shown and
+ * disabled, absent. The cut is a data decision, so it happens here.
+ */
+export type Destination = { path: string; label: string; hint: string };
+
+const ALL_DESTINATIONS: Destination[] = [
+  { path: '/', label: 'Home', hint: 'brief + queue' },
+  { path: '/projects', label: 'Projects', hint: 'list · board · pipeline' },
+  { path: '/money', label: 'Money', hint: 'timeline + ledgers' },
+  { path: '/people', label: 'People', hint: 'clients · vendors · team' },
+  { path: '/files', label: 'Files', hint: 'tree + versions' },
+  { path: '/calendar', label: 'Calendar', hint: 'one deadline axis' },
+  { path: '/canvas', label: 'Canvas', hint: 'composed answers' },
+  { path: '/memory', label: 'Memory', hint: "what we know / don't" },
+];
+
+export function destinations(state: RoleState): Destination[] {
+  if (canSeeMoney(state)) return ALL_DESTINATIONS;
+  return ALL_DESTINATIONS.filter((d) => d.path !== '/money');
+}
+
+/**
+ * The pinned screens this user may see (§7.5). Pins are per-user, and an admin
+ * pin holding money never reaches a team member.
+ */
+export function visiblePins<T extends { ownerId: EntityId; containsMoney: boolean }>(
+  state: RoleState,
+  pinned: T[],
+): T[] {
+  const money = canSeeMoney(state);
+  return pinned.filter(
+    (pin) => pin.ownerId === state.currentUserId && (money || !pin.containsMoney),
+  );
+}

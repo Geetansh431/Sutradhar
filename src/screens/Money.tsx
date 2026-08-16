@@ -16,7 +16,7 @@ import { ChangePreview } from '@/blocks/ChangePreview';
 import { DataGrid } from '@/blocks/DataGrid';
 import { MoneyTimeline } from '@/blocks/MoneyTimeline';
 import { paymentColumns, uncoveredIds } from '@/blocks/paymentColumns';
-import { AdminOnly, type ModeOption, ModeSwitch, PrototypeBadge } from '@/chrome/ModeSwitch';
+import { AdminOnly, type ModeOption, ModeSwitch } from '@/chrome/ModeSwitch';
 import { WarningStrip } from '@/chrome/WarningStrip';
 import { chaseInflow, regateOutflow } from '@/domain/proposals';
 import { gapSentence, moneyWindow } from '@/domain/selectors/money';
@@ -81,12 +81,9 @@ export function Money({ stateOverride }: MoneyProps = {}) {
 
   return (
     <main className="mx-auto max-w-6xl space-y-4 px-6 py-6">
-      <header className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-        <div>
-          <h1 className="font-display text-ink text-xl">Money</h1>
-          <p className="text-mute text-sm">All projects · next 60 days</p>
-        </div>
-        <PrototypeBadge />
+      <header>
+        <h1 className="font-display text-ink text-xl">Money</h1>
+        <p className="text-mute text-sm">All projects · next 60 days</p>
       </header>
 
       <ModeSwitch modes={MODES} active={mode} onChange={setMode} label="Money view" />

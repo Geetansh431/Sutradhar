@@ -43,6 +43,23 @@ export function buildState(id: ScenarioId): AppState {
     case 'live':
       return { ...firm, coverage: 0.58, onboarding: { step: 'done' } };
     case 'settled':
-      return { ...firm, coverage: 0.61, onboarding: { step: 'done' }, demoSettled: true };
+      return {
+        ...firm,
+        coverage: 0.61,
+        onboarding: { step: 'done' },
+        demoSettled: true,
+        // The demo's close (4:30): the admin pinned the vendor-exposure canvas
+        // and it became their own screen in the rail.
+        pinned: [
+          {
+            id: 'pin-vendor-exposure',
+            name: 'Vendor exposure',
+            questionId: 'vendor-exposure',
+            ownerId: 'person-anil',
+            containsMoney: true,
+            pinnedAt: '2026-08-12T07:45:00.000Z',
+          },
+        ],
+      };
   }
 }

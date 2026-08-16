@@ -34,6 +34,26 @@ export type CoverageByArea = Record<CoverageArea, number>;
 
 export type EntityTable = Record<EntityId, Entity>;
 
+/**
+ * A canvas the user kept — spec §7.5. "Any composition the user keeps becomes a
+ * permanent screen in their rail. They designed it by asking a question, not by
+ * configuring anything."
+ *
+ * It stores the question, not the answer: a pinned canvas re-runs its query on
+ * open, so a pin cannot go stale the way a saved screenshot would.
+ */
+export type PinnedScreen = {
+  id: EntityId;
+  /** Renameable; defaults to the question that produced it. */
+  name: string;
+  questionId: string;
+  /** Per-user by default (§7.5). */
+  ownerId: EntityId;
+  /** Admin pins holding money are never visible to Team (§7.5). */
+  containsMoney: boolean;
+  pinnedAt: string;
+};
+
 export type AppState = {
   entities: EntityTable;
   documents: Document[];
@@ -46,6 +66,8 @@ export type AppState = {
   audit: AuditEntry[];
   undoQueue: UndoEntry[];
   currentUserId: EntityId | null;
+  /** The user's own screens, shown in the rail below Firm Memory (§4.2). */
+  pinned: PinnedScreen[];
 };
 
 export type Store = AppState & {
@@ -62,6 +84,10 @@ export type Store = AppState & {
   ) => void;
   unlinkEntities: (from: EntityId, to: EntityId) => void;
   confirmField: (id: EntityId, field: string, confirmedBy: string) => void;
+  /** The demo's role switcher — §3.2, "two seeded logins ... visible switcher". */
+  setCurrentUser: (id: EntityId) => void;
+  pin: (screen: PinnedScreen) => void;
+  unpin: (id: EntityId) => void;
 };
 
 export const useStore = create<Store>()(
@@ -83,6 +109,7 @@ export const useStore = create<Store>()(
     audit: [],
     undoQueue: [],
     currentUserId: null,
+    pinned: [],
 
     reset: (next) =>
       set((state) => {
@@ -138,6 +165,22 @@ export const useStore = create<Store>()(
       set((state) => {
         const entity = state.entities[from];
         if (entity?.kind === 'payment') entity.gatedOn = null;
+      }),
+
+    setCurrentUser: (id) =>
+      set((state) => {
+        state.currentUserId = id;
+      }),
+
+    pin: (screen) =>
+      set((state) => {
+        if (state.pinned.some((p) => p.id === screen.id)) return;
+        state.pinned.push(screen);
+      }),
+
+    unpin: (id) =>
+      set((state) => {
+        state.pinned = state.pinned.filter((p) => p.id !== id);
       }),
 
     confirmField: (id, field, confirmedBy) =>

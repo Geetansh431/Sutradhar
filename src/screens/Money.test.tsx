@@ -63,8 +63,10 @@ describe('the admin view — w09', () => {
     expect(text(html)).toContain('not covered');
   });
 
-  it('carries the permanent prototype badge', () => {
-    expect(text(html)).toContain('Prototype · canned responses');
+  it('leaves the prototype badge to the shell, not the screen', () => {
+    // The badge is permanent (CLAUDE.md) but lives in the topbar now, so a
+    // screen rendered on its own should not draw a second one.
+    expect(text(html)).not.toContain('Prototype · canned responses');
   });
 
   it('shows no change preview until an action is taken', () => {

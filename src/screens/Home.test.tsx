@@ -78,8 +78,10 @@ describe('the admin view — w06', () => {
     expect(text(html)).toContain('Open full calendar');
   });
 
-  it('carries the permanent prototype badge', () => {
-    expect(text(html)).toContain('Prototype · canned responses');
+  it('leaves the prototype badge to the shell, not the screen', () => {
+    // The badge is permanent (CLAUDE.md) but lives in the topbar now, so a
+    // screen rendered on its own should not draw a second one.
+    expect(text(html)).not.toContain('Prototype · canned responses');
   });
 });
 

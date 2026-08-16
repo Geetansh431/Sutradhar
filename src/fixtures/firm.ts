@@ -865,5 +865,8 @@ export function buildFirm(): Firm {
     audit: [],
     undoQueue: [],
     currentUserId: ADMIN,
+    // Nothing pinned yet — the demo's close (4:30) is the admin pinning the
+    // vendor-exposure canvas, so it has to start empty for that beat to land.
+    pinned: [],
   };
 }

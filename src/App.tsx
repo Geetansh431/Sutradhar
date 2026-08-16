@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
+import { Shell } from '@/chrome/Shell';
 import { buildState, readScenarioFromUrl } from '@/fixtures/scenarios';
 import { Lab } from '@/lab/Lab';
 import { Home } from '@/screens/Home';
@@ -27,8 +28,13 @@ export function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/money" element={<Money />} />
+        {/* Screens render inside the shell — rail, topbar, ask bar. */}
+        <Route element={<Shell />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/money" element={<Money />} />
+        </Route>
+
+        {/* /lab is a review surface, deliberately outside the chrome. */}
         <Route path="/lab" element={<Lab />} />
         <Route path="/lab/:section" element={<Lab />} />
         {/* Home, Money and /lab exist so far. The rest of the eight land here

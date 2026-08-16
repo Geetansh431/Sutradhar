@@ -20,7 +20,6 @@ import { ActionQueue } from '@/chrome/home/ActionQueue';
 import { Brief, BriefHeader } from '@/chrome/home/Brief';
 import { PulseCards } from '@/chrome/home/PulseCards';
 import { TodayPanel } from '@/chrome/home/TodayPanel';
-import { PrototypeBadge } from '@/chrome/ModeSwitch';
 import { actionQueue, brief, pulse, today } from '@/domain/selectors/home';
 import { canSeeMoney, currentPerson } from '@/domain/selectors/role';
 import type { EntityId } from '@/domain/types';
@@ -56,10 +55,7 @@ export function Home({ stateOverride }: HomeProps = {}) {
 
   return (
     <main className="mx-auto max-w-6xl space-y-4 px-6 py-6">
-      <header className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-        <BriefHeader name={person?.name.split(' ')[0] ?? 'there'} />
-        <PrototypeBadge />
-      </header>
+      <BriefHeader name={person?.name.split(' ')[0] ?? 'there'} />
 
       <Brief brief={view.brief} />
 
