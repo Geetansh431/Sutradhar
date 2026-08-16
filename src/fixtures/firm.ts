@@ -551,8 +551,11 @@ const payments: Payment[] = [
     id: 'payment-team-salaries-aug',
     kind: 'payment',
     direction: 'out',
-    projectId: 'project-iyer',
-    counterpartyId: ADMIN,
+    // w09 prints this row as "Team salaries · firm-level": a recurring cost
+    // that belongs to no project and has no vendor on the other side.
+    projectId: null,
+    counterpartyId: null,
+    label: 'Team salaries',
     amount: {
       ...confirmedBy(human('Anil Kumar', 'onboarding interview')),
       value: rupees(420000),

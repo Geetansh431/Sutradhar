@@ -184,10 +184,19 @@ describe('the fixtures obey the project rules', () => {
     }
   });
 
-  it('every payment points at a project and a counterparty that exist', () => {
+  it('every payment reference that is set resolves to a real entity', () => {
     for (const p of payments) {
-      expect(firm.entities[p.projectId], `${p.id} project`).toBeDefined();
-      expect(firm.entities[p.counterpartyId], `${p.id} counterparty`).toBeDefined();
+      // Both are nullable: a firm-level cost like salaries has neither.
+      if (p.projectId) expect(firm.entities[p.projectId], `${p.id} project`).toBeDefined();
+      if (p.counterpartyId) {
+        expect(firm.entities[p.counterpartyId], `${p.id} counterparty`).toBeDefined();
+      }
+    }
+  });
+
+  it('a payment with no counterparty carries its own label', () => {
+    for (const p of payments) {
+      if (!p.counterpartyId) expect(p.label, `${p.id} needs a label`).toBeTruthy();
     }
   });
 

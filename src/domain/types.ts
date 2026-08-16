@@ -97,9 +97,18 @@ export type Payment = {
   id: EntityId;
   kind: 'payment';
   direction: PaymentDirection;
-  projectId: EntityId;
-  /** The client (direction 'in') or vendor (direction 'out') this payment is with. */
-  counterpartyId: EntityId;
+  /**
+   * `null` for a firm-level cost that belongs to no single project — salaries,
+   * rent. w09 prints "firm-level" in the project column for exactly these.
+   */
+  projectId: EntityId | null;
+  /**
+   * The client (direction 'in') or vendor (direction 'out') this payment is
+   * with. `null` where the counterparty is the firm itself, as with salaries.
+   */
+  counterpartyId: EntityId | null;
+  /** Shown when there is no counterparty entity to name — "Team salaries". */
+  label?: string;
   amount: FieldValue<Paise>;
   due: FieldValue<string>;
   status: PaymentStatus;

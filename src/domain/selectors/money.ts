@@ -224,8 +224,10 @@ export function moneyWindow(
     amount: p.amount,
     due: p.due,
     status: p.status,
-    counterpartyName: nameOf(state, p.counterpartyId),
-    projectName: nameOf(state, p.projectId),
+    // A firm-level cost has no counterparty entity, so it carries its own
+    // label — "Team salaries" on w09 — and reads as "firm-level".
+    counterpartyName: p.counterpartyId ? nameOf(state, p.counterpartyId) : (p.label ?? 'Firm'),
+    projectName: p.projectId ? nameOf(state, p.projectId) : 'firm-level',
     gatedOn: p.gatedOn,
     uncovered: p.direction === 'out' && uncovered.has(p.id),
   }));

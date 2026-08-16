@@ -7,8 +7,10 @@
  * correct, because the point is to see the state, not to model the firm.
  */
 
+import { DataGrid, DataGridLoading } from '@/blocks/DataGrid';
 import { MoneyTimeline, MoneyTimelineLoading } from '@/blocks/MoneyTimeline';
-import type { MoneyState } from '@/domain/selectors/money';
+import { paymentColumns, uncoveredIds } from '@/blocks/paymentColumns';
+import { type MoneyState, moneyWindow } from '@/domain/selectors/money';
 import type { Payment } from '@/domain/types';
 import { buildState } from '@/fixtures/scenarios';
 import type { LabCase } from '@/lab/registry';
@@ -163,4 +165,157 @@ export const MONEY_TIMELINE_CASES: LabCase[] = [
   },
 ];
 
-export const ALL_CASES: LabCase[] = [...MONEY_TIMELINE_CASES];
+// ── Block 02 · data grid ────────────────────────────────────────────────
+// Shown over payments, because that is the configuration w09 specifies and the
+// one the Money screen will compose.
+
+const gridRows = (state: MoneyState) => moneyWindow(state).payments;
+
+/** Resolves a gate id to the short label w09 prints ("Iyer inst. 3"). */
+const gateLabel = (id: string) =>
+  id === 'payment-iyer-instalment-3' ? 'Iyer inst. 3' : id.replace('payment-', '');
+
+const gridColumns = paymentColumns({ gateLabel });
+
+export const DATA_GRID_CASES: LabCase[] = [
+  {
+    block: '02-data-grid',
+    state: 'loading',
+    note: 'skeleton rows — no data read',
+    render: () => <DataGridLoading />,
+  },
+  {
+    block: '02-data-grid',
+    state: 'empty',
+    note: 'never a blank panel — says what will appear',
+    render: () => (
+      <DataGrid
+        rows={gridRows({ entities: {} })}
+        columns={gridColumns}
+        rowId={(p) => p.id}
+        emptyMessage="No payments scheduled in this window."
+        emptyHint="Capture one with ⌘K, or drop a bill in."
+      />
+    ),
+  },
+  {
+    block: '02-data-grid',
+    state: 'populated',
+    note: 'the live scenario — the six rows of w09, sortable',
+    render: () => {
+      const rows = gridRows(LIVE);
+      return (
+        <DataGrid
+          rows={rows}
+          columns={gridColumns}
+          rowId={(p) => p.id}
+          highlightIds={uncoveredIds(rows)}
+          caption="Payments"
+          onPropose={() => {}}
+          bulkActions={[{ label: 'Re-gate', onRun: () => {} }]}
+        />
+      );
+    },
+  },
+  {
+    block: '02-data-grid',
+    state: 'unconfirmed',
+    note: 'extracted amount — dotted, hover for the source',
+    render: () => (
+      <DataGrid
+        rows={gridRows(
+          stateWith([
+            anchorInflow,
+            pay({
+              id: 'lab-out',
+              direction: 'out',
+              due: '2026-08-20',
+              amountField: {
+                state: 'extracted',
+                value: rupees(110000),
+                source: { kind: 'document', id: 'd', label: 'Vendor bill photo' },
+                confidence: 0.61,
+              },
+            }),
+          ]),
+        )}
+        columns={gridColumns}
+        rowId={(p) => p.id}
+        onPropose={() => {}}
+      />
+    ),
+  },
+  {
+    block: '02-data-grid',
+    state: 'conflicting',
+    note: 'both values shown, amber — never silently picks one',
+    render: () => (
+      <DataGrid
+        rows={gridRows(
+          stateWith([
+            anchorInflow,
+            pay({
+              id: 'lab-out',
+              direction: 'out',
+              due: '2026-08-20',
+              amountField: {
+                state: 'conflicting',
+                candidates: [
+                  {
+                    value: rupees(90000),
+                    source: { kind: 'document', id: 'd1', label: 'Bill photo' },
+                  },
+                  {
+                    value: rupees(95000),
+                    source: { kind: 'message', id: 'm1', label: 'WhatsApp' },
+                  },
+                ],
+              },
+            }),
+          ]),
+        )}
+        columns={gridColumns}
+        rowId={(p) => p.id}
+      />
+    ),
+  },
+  {
+    block: '02-data-grid',
+    state: 'missing',
+    note: '"— add" is an affordance, never a zero',
+    render: () => (
+      <DataGrid
+        rows={gridRows(
+          stateWith([
+            anchorInflow,
+            pay({
+              id: 'lab-out',
+              direction: 'out',
+              due: '2026-08-22',
+              amountField: { state: 'missing', blocks: ['payment grid', 'coverage warnings'] },
+            }),
+          ]),
+        )}
+        columns={gridColumns}
+        rowId={(p) => p.id}
+        onPropose={() => {}}
+      />
+    ),
+  },
+  {
+    block: '02-data-grid',
+    state: 'restricted',
+    note: 'Team role — the rows are never fetched',
+    render: () => (
+      <DataGrid
+        rows={gridRows(LIVE)}
+        columns={gridColumns}
+        rowId={(p) => p.id}
+        restricted
+        restrictedMessage="Firm money is admin-only."
+      />
+    ),
+  },
+];
+
+export const ALL_CASES: LabCase[] = [...MONEY_TIMELINE_CASES, ...DATA_GRID_CASES];
