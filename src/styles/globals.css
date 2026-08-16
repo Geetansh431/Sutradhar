@@ -1,0 +1,164 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* ─────────────────────────────────────────────────────────────
+   SUTRADHAR THEME
+   Palette lifted from the approved wireframes, converted to OKLCH.
+   Two font variables and nothing else — swapping the type pairing
+   is a one-line change. Decide it on /lab/type against real content.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  /* — type ————————————————————————————— */
+  --font-display: "Source Serif 4", Georgia, serif;
+  --font-ui: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* — raw palette ——————————————————————— */
+  --paper: oklch(1 0 90); /* #FFFFFF */
+  --panel: oklch(0.9823 0.0029 84.56); /* #FAF9F7 */
+  --fill: oklch(0.9591 0.0074 80.72); /* #F4F1EC */
+  --fill-2: oklch(0.9145 0.0121 79.78); /* #E7E2DA */
+  --line: oklch(0.8624 0.0122 79.78); /* #D6D1C9 */
+  --line-strong: oklch(0.6184 0.0146 82.39); /* #8A857C */
+  --faint: oklch(0.6558 0.0149 78.22); /* #969087 */
+  --mute: oklch(0.5257 0.0119 81.78); /* #6E6A63 */
+  --ink: oklch(0.2446 0.0064 78.21); /* #22201D */
+
+  --accent: oklch(0.5367 0.1177 37.88); /* #A65238 terracotta */
+  --accent-hover: oklch(0.4766 0.1064 37.33); /* #8E442E */
+  --accent-soft: oklch(0.9429 0.0157 42.38); /* #F6E9E4 */
+
+  --ok: oklch(0.5367 0.0781 146.04); /* #4F7A52 */
+  --ok-soft: oklch(0.9466 0.0147 142.23); /* #E8F0E7 */
+  --warn: oklch(0.5902 0.1151 83.31); /* #9E7615 */
+  --warn-soft: oklch(0.9567 0.0333 88.06); /* #FAF0D8 */
+
+  /* — semantic (what components actually reference) ————— */
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--paper);
+  --card-foreground: var(--ink);
+  --popover: var(--paper);
+  --popover-foreground: var(--ink);
+  --primary: var(--accent);
+  --primary-foreground: var(--paper);
+  --secondary: var(--fill);
+  --secondary-foreground: var(--ink);
+  --muted: var(--fill);
+  --muted-foreground: var(--mute);
+  --accent-bg: var(--accent-soft);
+  --accent-foreground: var(--accent);
+  --destructive: var(--accent);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--accent);
+  --radius: 0.5rem;
+
+  /* — field states (spec §5.5) ————————————— */
+  --state-confirmed: var(--ink);
+  --state-extracted: var(--accent);
+  --state-inferred: var(--warn);
+  --state-conflicting: var(--warn);
+  --state-missing: var(--faint);
+
+  /* — density: data blocks run one step tighter than shadcn default — */
+  --row-h: 2rem;
+  --row-px: 0.625rem;
+  --cell-fs: 0.8125rem;
+  --block-gap: 0.75rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent-bg);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-paper: var(--paper);
+  --color-panel: var(--panel);
+  --color-fill: var(--fill);
+  --color-fill-2: var(--fill-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-faint: var(--faint);
+  --color-mute: var(--mute);
+  --color-ink: var(--ink);
+  --color-brand: var(--accent);
+  --color-brand-soft: var(--accent-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+
+  --font-display: var(--font-display);
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-mono);
+
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/40;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings:
+      "cv05" 1,
+      "ss01" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+  }
+
+  /* Rupee figures never break across lines and always align in columns. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* Field-state treatments — the only place these are defined (spec §5.5). */
+  .fv-extracted {
+    color: var(--state-extracted);
+    text-decoration: underline dotted 1.5px;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .fv-inferred {
+    color: var(--state-inferred);
+    text-decoration: underline dotted 1.5px;
+    text-underline-offset: 3px;
+  }
+  .fv-conflicting {
+    color: var(--state-conflicting);
+    background: var(--warn-soft);
+    padding-inline: 0.25rem;
+    border-radius: 0.25rem;
+  }
+  .fv-missing {
+    color: var(--state-missing);
+    font-style: italic;
+    cursor: pointer;
+  }
+}

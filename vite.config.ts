@@ -1,7 +1,10 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
 
-// https://vite.dev/config/
+// Vite 8 resolves tsconfig `paths` natively — no vite-tsconfig-paths plugin needed.
 export default defineConfig({
-  plugins: [react()],
-})
+  plugins: [react(), tailwindcss()],
+  server: { port: 5173, strictPort: true, open: '/?s=live' },
+  build: { target: 'baseline-widely-available', sourcemap: true },
+});

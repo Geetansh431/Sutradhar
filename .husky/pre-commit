@@ -1,0 +1,3 @@
+npx biome check --write .
+npx tsc -b --noEmit
+npx vitest run --silent --passWithNoTests
