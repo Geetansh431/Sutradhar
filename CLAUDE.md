@@ -4,6 +4,9 @@ A **canned, on-script demo** of an operating system for an interior design firm.
 Laptop-only. No backend. No persistence. No real AI calls. Synthetic data.
 
 The spec this implements is `docs/spec/` — read the relevant section before building a screen.
+**Where the prose and a wireframe disagree on a figure, the wireframe wins.** It is what the
+demo puts on screen; `src/fixtures/firm.ts` is authored from the wireframes and
+`firm.test.ts` pins every number to one.
 
 ---
 
@@ -38,6 +41,12 @@ These are architectural, not stylistic. Violating one means the work gets revert
 
 8. **No `any`, no `as` casts on domain types, no `@ts-expect-error`.** The types encode the
    spec's rules; escaping them defeats the point.
+
+9. **The clock is fixed.** `TODAY` is 12 August 2026, in `src/lib/dates.ts`. Never call
+   `new Date()` or `Date.now()` in `src/` — use `now()`, `nowISO()`, `todayISO()`. The
+   fixtures are dated relative to that day: the Iyer instalment is due today, Sharma's
+   ₹80,000 two days out, the coverage gap opens at day 14. A wall-clock read makes the
+   demo drift out of shape overnight.
 
 ---
 

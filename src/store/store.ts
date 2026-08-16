@@ -8,6 +8,7 @@ import { castDraft } from 'immer';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import type { Document, Entity, EntityId, EntityKind, EntityPatch } from '@/domain/types';
+import { hoursFromNow, nowISO } from '@/lib/dates';
 import type { FieldValue } from '@/lib/field';
 import type { AuditEntry, Change, ChangeSet, UndoEntry } from './change';
 
@@ -94,7 +95,8 @@ export const useStore = create<Store>()(
           castDraft({
             changeSet,
             inverse,
-            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            // Undo stays available for 24h — spec §8.3.
+            expiresAt: hoursFromNow(24),
           }),
         );
       }),
@@ -166,7 +168,7 @@ function confirmFieldValue(
         ? current.source
         : { kind: 'derived', id: `${id}-${field}`, label: 'inferred value' },
     confirmedBy,
-    confirmedAt: new Date().toISOString(),
+    confirmedAt: nowISO(),
   };
 }
 

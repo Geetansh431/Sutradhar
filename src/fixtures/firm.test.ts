@@ -9,6 +9,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Payment, Project, Task, Vendor } from '@/domain/types';
 import { buildFirm } from '@/fixtures/firm';
+import { daysFromToday, isToday, isWithinDays } from '@/lib/dates';
 import { formatINR } from '@/lib/money';
 
 const firm = buildFirm();
@@ -88,6 +89,37 @@ describe('w09 — money', () => {
     expect(godrej?.amount.state === 'confirmed' && formatINR(godrej.amount.value)).toBe(
       '₹1,70,000',
     );
+  });
+});
+
+describe('the demo timeline, against the fixed today', () => {
+  const due = (id: string) => {
+    const p = payments.find((p) => p.id === id);
+    return p?.due.state === 'confirmed' ? p.due.value : '';
+  };
+
+  it('the Iyer instalment is due today — w09 says "due today"', () => {
+    expect(isToday(due('payment-iyer-instalment-3'))).toBe(true);
+  });
+
+  it("Sharma's ₹80,000 lands two days out, after the instalment it is gated on", () => {
+    expect(daysFromToday(due('payment-sharma-running-bill'))).toBe(2);
+    expect(daysFromToday(due('payment-sharma-running-bill'))).toBeGreaterThan(
+      daysFromToday(due('payment-iyer-instalment-3')),
+    );
+  });
+
+  it('the Godrej payment opens the gap inside the 14-day pulse-card window', () => {
+    expect(daysFromToday(due('payment-godrej-iyer'))).toBe(14);
+    expect(isWithinDays(due('payment-godrej-iyer'), 14)).toBe(true);
+  });
+
+  it('nothing is dated in the past — the demo opens on a clean queue', () => {
+    for (const p of payments) {
+      if (p.due.state === 'confirmed') {
+        expect(daysFromToday(p.due.value), `${p.id} is in the past`).toBeGreaterThanOrEqual(0);
+      }
+    }
   });
 });
 

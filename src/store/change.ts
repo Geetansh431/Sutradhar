@@ -10,6 +10,7 @@
 
 import { nanoid } from 'nanoid';
 import type { Entity, EntityId, EntityPatch } from '@/domain/types';
+import { nowISO } from '@/lib/dates';
 import type { SourceRef } from '@/lib/field';
 import type { Paise } from '@/lib/money';
 import type { Store } from './store';
@@ -50,7 +51,7 @@ export const proposeChangeSet = (
   init: Pick<ChangeSet, 'proposedBy' | 'source' | 'changes'>,
 ): ChangeSet => ({
   id: nanoid(8),
-  createdAt: new Date().toISOString(),
+  createdAt: nowISO(),
   confirmedAt: null,
   confirmedBy: null,
   ...init,
@@ -89,7 +90,7 @@ export function applyChange(store: Store, changeSet: ChangeSet, actor: string): 
     changeSetId: changeSet.id,
     actor,
     proposedBy: changeSet.proposedBy,
-    at: new Date().toISOString(),
+    at: nowISO(),
     summary: changeSet.changes.map((c) => c.label).join('; '),
     source: changeSet.source,
   });
@@ -126,7 +127,7 @@ function applyOne(store: Store, change: Change): Change {
       return { op: 'settle', id: change.id, amount: change.amount, on: change.on };
     }
     case 'archive': {
-      store.patchEntity(change.id, { archivedAt: new Date().toISOString() });
+      store.patchEntity(change.id, { archivedAt: nowISO() });
       return { op: 'archive', id: change.id, reason: change.reason };
     }
   }
