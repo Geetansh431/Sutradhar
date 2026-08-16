@@ -27,6 +27,12 @@ export const absPaise = (a: Paise): Paise => Math.abs(a) as Paise;
 export const scalePaise = (a: Paise, factor: number): Paise => Math.round(a * factor) as Paise;
 export const comparePaise = (a: Paise, b: Paise): number => a - b;
 
+/**
+ * The ratio of one amount to another, as a plain 0..1 number. Money divided by
+ * money is not money, so this is where that conversion is allowed to happen.
+ */
+export const ratioPaise = (part: Paise, whole: Paise): number => (whole === 0 ? 0 : part / whole);
+
 const inr = new Intl.NumberFormat('en-IN', {
   style: 'currency',
   currency: 'INR',

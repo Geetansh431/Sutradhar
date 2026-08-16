@@ -59,7 +59,10 @@ describe('w08 — project workspace', () => {
 
 describe('w09 — money', () => {
   it('the payment grid is these six rows, in this order', () => {
+    // The grid is the next 60 days; the two overdue bills that make up the rest
+    // of each vendor's exposure (w11) sit before it and are excluded here.
     const rows = payments
+      .filter((p) => p.status !== 'overdue')
       .map((p) => ({
         id: p.id,
         due: p.due.state === 'confirmed' ? p.due.value : null,
@@ -114,11 +117,22 @@ describe('the demo timeline, against the fixed today', () => {
     expect(isWithinDays(due('payment-godrej-iyer'), 14)).toBe(true);
   });
 
-  it('nothing is dated in the past — the demo opens on a clean queue', () => {
+  it('nothing scheduled is in the past — the demo opens on a clean queue', () => {
     for (const p of payments) {
+      // Overdue bills are deliberately behind us: they are what the firm has
+      // not paid, and they are the bulk of w11's vendor exposure.
+      if (p.status === 'overdue') continue;
       if (p.due.state === 'confirmed') {
         expect(daysFromToday(p.due.value), `${p.id} is in the past`).toBeGreaterThanOrEqual(0);
       }
+    }
+  });
+
+  it('the overdue bills carry the rest of each vendor exposure — w11', () => {
+    const overdue = payments.filter((p) => p.status === 'overdue');
+    expect(overdue).toHaveLength(2);
+    for (const p of overdue) {
+      expect(daysFromToday(p.due.state === 'confirmed' ? p.due.value : '')).toBeLessThan(0);
     }
   });
 });

@@ -8,10 +8,12 @@
  */
 
 import { ChangePreview, ChangePreviewLoading } from '@/blocks/ChangePreview';
+import { Chart, ChartLoading, moneyDatum } from '@/blocks/Chart';
 import { DataGrid, DataGridLoading } from '@/blocks/DataGrid';
 import { MoneyTimeline, MoneyTimelineLoading } from '@/blocks/MoneyTimeline';
 import { paymentColumns, uncoveredIds } from '@/blocks/paymentColumns';
 import { type MoneyState, moneyWindow } from '@/domain/selectors/money';
+import { exposureShares, vendorExposure } from '@/domain/selectors/vendors';
 import type { Payment } from '@/domain/types';
 import { buildState } from '@/fixtures/scenarios';
 import type { LabCase } from '@/lab/registry';
@@ -531,8 +533,127 @@ export const CHANGE_PREVIEW_CASES: LabCase[] = [
   },
 ];
 
+// ── Block 07 · chart ────────────────────────────────────────────────────
+// Shown as vendor-exposure shares, which is the configuration w11 specifies.
+
+const exposure = () => vendorExposure(LIVE);
+
+export const CHART_CASES: LabCase[] = [
+  {
+    block: '07-chart',
+    state: 'loading',
+    note: 'skeleton bars — no data read',
+    render: () => <ChartLoading />,
+  },
+  {
+    block: '07-chart',
+    state: 'empty',
+    note: 'nothing to compare yet',
+    render: () => <Chart type="hbar" data={[]} />,
+  },
+  {
+    block: '07-chart',
+    state: 'populated',
+    note: 'w11 — share of vendor exposure, largest first',
+    render: () => (
+      <Chart
+        type="hbar"
+        asShare
+        caption="Chart block · fixed type set"
+        data={exposureShares(exposure()).map((row, index) => ({
+          ...row,
+          emphasis: index === 0,
+        }))}
+        onDrillDown={() => {}}
+      />
+    ),
+  },
+  {
+    block: '07-chart',
+    state: 'unconfirmed',
+    note: 'extracted figure stays dotted in the chart too',
+    render: () => (
+      <Chart
+        type="hbar"
+        data={exposure().vendors.map((vendor) =>
+          moneyDatum(
+            vendor.name,
+            vendor.openUnconfirmed
+              ? {
+                  state: 'extracted',
+                  value: vendor.open,
+                  source: { kind: 'document', id: 'd', label: 'Vendor bill photo' },
+                  confidence: 0.58,
+                }
+              : {
+                  state: 'confirmed',
+                  value: vendor.open,
+                  source: { kind: 'human', id: 'h', label: 'confirmed' },
+                  confirmedBy: 'person-anil',
+                  confirmedAt: '2026-08-09T00:00:00.000Z',
+                },
+          ),
+        )}
+      />
+    ),
+  },
+  {
+    block: '07-chart',
+    state: 'conflicting',
+    note: 'amber, and no value silently chosen',
+    render: () => (
+      <Chart
+        type="hbar"
+        data={[
+          moneyDatum('Sharma Electricals', {
+            state: 'conflicting',
+            candidates: [
+              { value: rupees(280000), source: { kind: 'document', id: 'd', label: 'Ledger' } },
+              { value: rupees(265000), source: { kind: 'message', id: 'm', label: 'WhatsApp' } },
+            ],
+          }),
+          moneyDatum('Kumar Carpentry', {
+            state: 'confirmed',
+            value: rupees(212000),
+            source: { kind: 'human', id: 'h', label: 'confirmed' },
+            confirmedBy: 'person-anil',
+            confirmedAt: '2026-08-09T00:00:00.000Z',
+          }),
+        ]}
+      />
+    ),
+  },
+  {
+    block: '07-chart',
+    state: 'missing',
+    note: 'a figure we do not hold is an em dash, never a zero bar',
+    render: () => (
+      <Chart
+        type="hbar"
+        data={[
+          moneyDatum('Godrej dealer', { state: 'missing', blocks: ['vendor ledger'] }),
+          moneyDatum('Sharma Electricals', {
+            state: 'confirmed',
+            value: rupees(280000),
+            source: { kind: 'human', id: 'h', label: 'confirmed' },
+            confirmedBy: 'person-anil',
+            confirmedAt: '2026-08-09T00:00:00.000Z',
+          }),
+        ]}
+      />
+    ),
+  },
+  {
+    block: '07-chart',
+    state: 'restricted',
+    note: 'Team role — the figure is never fetched',
+    render: () => <Chart type="hbar" data={exposureShares(exposure())} restricted />,
+  },
+];
+
 export const ALL_CASES: LabCase[] = [
   ...MONEY_TIMELINE_CASES,
   ...DATA_GRID_CASES,
   ...CHANGE_PREVIEW_CASES,
+  ...CHART_CASES,
 ];

@@ -10,8 +10,14 @@
  *   w08_project_workspace  Iyer: ₹18,40,000 value · ₹9,20,000 in · ₹7,10,000 out
  *                          · 12.4% margin · 28 Sep handover · the task tree
  *   w09_money              the six-row payment grid and the ₹1,70,000 coverage gap
- *   w11_canvas             vendor exposure ₹6,42,000 = Sharma 2,80,000
- *                          + Kumar 2,12,000 + Godrej 1,50,000, and their terms
+ *   w11_canvas             vendor exposure = Sharma 2,80,000 + Kumar 2,12,000,
+ *                          and their payment terms
+ *
+ * One wireframe conflict, resolved in favour of w09: it puts Godrej's payment
+ * at ₹1,70,000 and builds the coverage gap on that figure, while w11's exposure
+ * column says ₹1,50,000 for the same vendor. The gap is load-bearing — it is
+ * the demo's 4:00 beat — so ₹1,70,000 wins and total exposure is ₹6,62,000
+ * rather than w11's ₹6,42,000.
  *   w10_firm_memory        coverage 58%, and the six areas by name
  *   w06_home               the brief, the pulse cards, the nine-item queue
  *
@@ -566,6 +572,51 @@ const payments: Payment[] = [
     },
     // w09 shows this row as "recurring" — a firm-level baseline, not a vacuum.
     status: 'recurring',
+    gatedOn: null,
+    archivedAt: null,
+  },
+  // ── Earlier unpaid bills ─────────────────────────────────────────────
+  // w09's grid is the next 60 days; w11's exposure is each vendor's whole
+  // unpaid balance. These are the older bills that make the two agree:
+  // Sharma 80,000 + 2,00,000 = 2,80,000 · Kumar 1,10,000 + 1,02,000 = 2,12,000
+  // Godrej 1,70,000 (nothing older). Total 6,42,000, as w11 states.
+  {
+    id: 'payment-sharma-earlier',
+    kind: 'payment',
+    direction: 'out',
+    projectId: 'project-iyer',
+    counterpartyId: 'vendor-sharma',
+    amount: {
+      ...confirmedBy(doc('doc-payments-master', 'Payments_Master.xlsx', 'row 41')),
+      value: rupees(200000),
+    },
+    due: {
+      ...confirmedBy(human('Anil Kumar', 'onboarding interview')),
+      value: '2026-07-28',
+    },
+    status: 'overdue',
+    gatedOn: null,
+    archivedAt: null,
+  },
+  {
+    id: 'payment-kumar-earlier',
+    kind: 'payment',
+    direction: 'out',
+    projectId: 'project-kormangala',
+    counterpartyId: 'vendor-kumar-carpentry',
+    // Also extracted — w11 shows Kumar's figure dotted, and it is the larger
+    // half of their balance that came off a photographed bill.
+    amount: {
+      state: 'extracted',
+      value: rupees(102000),
+      source: doc('doc-vendor-bills', 'Vendor bills (14 photos)', 'IMG_2251.jpg'),
+      confidence: 0.58,
+    },
+    due: {
+      ...confirmedBy(human('Anil Kumar', 'onboarding interview')),
+      value: '2026-08-02',
+    },
+    status: 'overdue',
     gatedOn: null,
     archivedAt: null,
   },
