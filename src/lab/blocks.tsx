@@ -7,6 +7,7 @@
  * correct, because the point is to see the state, not to model the firm.
  */
 
+import { ChangePreview, ChangePreviewLoading } from '@/blocks/ChangePreview';
 import { DataGrid, DataGridLoading } from '@/blocks/DataGrid';
 import { MoneyTimeline, MoneyTimelineLoading } from '@/blocks/MoneyTimeline';
 import { paymentColumns, uncoveredIds } from '@/blocks/paymentColumns';
@@ -16,6 +17,7 @@ import { buildState } from '@/fixtures/scenarios';
 import type { LabCase } from '@/lab/registry';
 import type { FieldValue, SourceRef } from '@/lib/field';
 import { type Paise, rupees } from '@/lib/money';
+import { proposeChangeSet } from '@/store/change';
 
 const SOURCE: SourceRef = { kind: 'human', id: 'lab', label: 'lab fixture' };
 
@@ -318,4 +320,219 @@ export const DATA_GRID_CASES: LabCase[] = [
   },
 ];
 
-export const ALL_CASES: LabCase[] = [...MONEY_TIMELINE_CASES, ...DATA_GRID_CASES];
+// ── Block 09 · change preview ───────────────────────────────────────────
+// The w14 scenario verbatim: a bill photo captured by voice, producing three
+// changes of which one is a guess.
+
+const billSource: SourceRef = {
+  kind: 'document',
+  id: 'doc-img-2231',
+  label: 'photo of a bill',
+  locator: 'Sharma ka bill aa gaya, 80 hazaar, Iyer site" + IMG_2231.jpg',
+};
+
+const w14ChangeSet = () =>
+  proposeChangeSet({
+    proposedBy: 'ai',
+    source: billSource,
+    changes: [
+      {
+        change: {
+          op: 'create',
+          entity: pay({
+            id: 'new-sharma-bill',
+            direction: 'out',
+            due: '2026-08-14',
+            amount: 80000,
+          }),
+        },
+        before: null,
+        after: 'Sharma Electricals · ₹80,000 · out · due 14 Aug',
+        label: 'Payment record',
+        confidence: 'high',
+      },
+      {
+        change: { op: 'update', id: 'vendor-sharma', patch: { balance: rupees(280000) } },
+        before: '₹2,00,000',
+        after: '₹2,80,000',
+        label: 'Vendor balance',
+        confidence: 'high',
+      },
+      {
+        change: {
+          op: 'link',
+          from: 'task-iyer-wiring',
+          to: 'new-sharma-bill',
+          relation: 'gated-on',
+        },
+        before: null,
+        after: 'linked to this payment · I guessed this one',
+        label: 'Task "Wiring"',
+        confidence: 'low',
+      },
+    ],
+  });
+
+const noop = () => {};
+
+export const CHANGE_PREVIEW_CASES: LabCase[] = [
+  {
+    block: '09-change-preview',
+    state: 'loading',
+    note: 'extraction still running',
+    render: () => <ChangePreviewLoading />,
+  },
+  {
+    block: '09-change-preview',
+    state: 'empty',
+    note: 'nothing proposed — not an error state',
+    render: () => (
+      <ChangePreview
+        changeSet={proposeChangeSet({ proposedBy: 'ai', source: null, changes: [] })}
+        onConfirm={noop}
+      />
+    ),
+  },
+  {
+    block: '09-change-preview',
+    state: 'populated',
+    note: 'w14 exactly — 3 changes, one marked unsure',
+    render: () => (
+      <ChangePreview
+        changeSet={w14ChangeSet()}
+        onConfirm={noop}
+        onDiscard={noop}
+        onOpenSource={noop}
+        onEditRow={noop}
+      />
+    ),
+  },
+  {
+    block: '09-change-preview',
+    state: 'unconfirmed',
+    note: 'a user edit from the grid — one line, high confidence',
+    render: () => (
+      <ChangePreview
+        changeSet={proposeChangeSet({
+          proposedBy: 'user',
+          source: null,
+          changes: [
+            {
+              change: {
+                op: 'update',
+                id: 'payment-godrej-iyer',
+                patch: { amount: rupees(200000) },
+              },
+              before: '₹1,70,000',
+              after: '₹2,00,000',
+              label: 'Godrej dealer amount',
+              confidence: 'high',
+            },
+          ],
+        })}
+        onConfirm={noop}
+        onDiscard={noop}
+      />
+    ),
+  },
+  {
+    block: '09-change-preview',
+    state: 'conflicting',
+    note: 'every row a guess — marked, never hidden',
+    render: () => (
+      <ChangePreview
+        changeSet={proposeChangeSet({
+          proposedBy: 'ai',
+          source: { kind: 'message', id: 'm1', label: 'WhatsApp export', locator: 'msg 1,204' },
+          changes: [
+            {
+              change: { op: 'update', id: 'payment-kumar-kormangala', patch: {} },
+              before: '₹90,000',
+              after: '₹95,000',
+              label: 'Kumar Carpentry amount',
+              confidence: 'low',
+            },
+            {
+              change: {
+                op: 'link',
+                from: 'payment-kumar-kormangala',
+                to: 'payment-iyer-instalment-3',
+                relation: 'gated-on',
+              },
+              before: null,
+              after: 'gated on Iyer instalment 3 · I guessed this one',
+              label: 'Kumar payment',
+              confidence: 'low',
+            },
+          ],
+        })}
+        onConfirm={noop}
+        onDiscard={noop}
+      />
+    ),
+  },
+  {
+    block: '09-change-preview',
+    state: 'missing',
+    note: 'archive, never delete — no-AI rule #4',
+    render: () => (
+      <ChangePreview
+        changeSet={proposeChangeSet({
+          proposedBy: 'ai',
+          source: { kind: 'human', id: 'h', label: 'gap question' },
+          changes: [
+            {
+              change: {
+                op: 'archive',
+                id: 'project-hsr-duplex',
+                reason: 'lost — client went elsewhere',
+              },
+              before: 'in pipeline',
+              after: 'archived · lost',
+              label: 'HSR duplex',
+              confidence: 'high',
+            },
+          ],
+        })}
+        onConfirm={noop}
+        onDiscard={noop}
+      />
+    ),
+  },
+  {
+    block: '09-change-preview',
+    state: 'restricted',
+    note: 'a money change always names its human confirmer — no-AI rule #2',
+    render: () => (
+      <ChangePreview
+        changeSet={proposeChangeSet({
+          proposedBy: 'ai',
+          source: billSource,
+          changes: [
+            {
+              change: {
+                op: 'settle',
+                id: 'payment-sharma-running-bill',
+                amount: rupees(80000),
+                on: '2026-08-14',
+              },
+              before: 'due',
+              after: 'paid · needs a human',
+              label: 'Sharma running bill',
+              confidence: 'low',
+            },
+          ],
+        })}
+        onConfirm={noop}
+        onDiscard={noop}
+        confirmedBy="person-anil"
+      />
+    ),
+  },
+];
+
+export const ALL_CASES: LabCase[] = [
+  ...MONEY_TIMELINE_CASES,
+  ...DATA_GRID_CASES,
+  ...CHANGE_PREVIEW_CASES,
+];
