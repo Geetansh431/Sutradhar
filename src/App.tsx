@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 import { Shell } from '@/chrome/Shell';
 import { buildState, readScenarioFromUrl } from '@/fixtures/scenarios';
 import { Lab } from '@/lab/Lab';
+import { Canvas } from '@/screens/Canvas';
 import { Home } from '@/screens/Home';
 import { Money } from '@/screens/Money';
 import { useStore } from '@/store/store';
@@ -32,6 +33,8 @@ export function App() {
         <Route element={<Shell />}>
           <Route path="/" element={<Home />} />
           <Route path="/money" element={<Money />} />
+          <Route path="/canvas" element={<Canvas />} />
+          <Route path="/canvas/:questionId" element={<Canvas />} />
         </Route>
 
         {/* /lab is a review surface, deliberately outside the chrome. */}
