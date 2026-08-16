@@ -561,7 +561,8 @@ const payments: Payment[] = [
       ...confirmedBy(human('Anil Kumar', 'onboarding interview')),
       value: '2026-08-31',
     },
-    status: 'planned',
+    // w09 shows this row as "recurring" — a firm-level baseline, not a vacuum.
+    status: 'recurring',
     gatedOn: null,
     archivedAt: null,
   },

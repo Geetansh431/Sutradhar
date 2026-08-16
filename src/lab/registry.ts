@@ -52,12 +52,10 @@ export type LabCase = {
 };
 
 /**
- * Every built case. Empty until the first block lands — `/block <name>` adds
- * entries here as part of building, and the lab shows what is still missing.
+ * Cases live in `blocks.tsx` — which imports `LabCase` from here, so this file
+ * must not import back. `Lab` reads them from there and passes them down.
  */
-export const CASES: LabCase[] = [];
+export const casesFor = (cases: LabCase[], block: BlockId): Map<StateId, LabCase> =>
+  new Map(cases.filter((c) => c.block === block).map((c) => [c.state, c]));
 
-export const casesFor = (block: BlockId): Map<StateId, LabCase> =>
-  new Map(CASES.filter((c) => c.block === block).map((c) => [c.state, c]));
-
-export const builtCount = (): number => new Set(CASES.map((c) => c.block)).size;
+export const builtCount = (cases: LabCase[]): number => new Set(cases.map((c) => c.block)).size;

@@ -8,6 +8,7 @@
 
 import { Link, useParams } from 'react-router';
 import { readScenarioFromUrl } from '@/fixtures/scenarios';
+import { ALL_CASES } from '@/lab/blocks';
 import { LabTypeSpecimen } from '@/lab/LabType';
 import { BLOCKS, type BlockId, builtCount, casesFor, STATES } from '@/lab/registry';
 import { cn } from '@/lib/cn';
@@ -15,7 +16,7 @@ import { formatLongDate, TODAY } from '@/lib/dates';
 
 function Header({ section }: { section: string | undefined }) {
   const scenario = readScenarioFromUrl();
-  const built = builtCount();
+  const built = builtCount(ALL_CASES);
 
   return (
     <header className="border-line border-b bg-panel px-6 py-4">
@@ -59,7 +60,7 @@ function LabTab({ to, label, active }: { to: string; label: string; active?: boo
 }
 
 function StateCell({ block, state }: { block: BlockId; state: (typeof STATES)[number] }) {
-  const found = casesFor(block).get(state.id);
+  const found = casesFor(ALL_CASES, block).get(state.id);
 
   return (
     <div className="min-w-0">
@@ -87,7 +88,7 @@ function StateCell({ block, state }: { block: BlockId; state: (typeof STATES)[nu
 }
 
 function BlockSection({ block }: { block: (typeof BLOCKS)[number] }) {
-  const built = casesFor(block.id).size;
+  const built = casesFor(ALL_CASES, block.id).size;
 
   return (
     <section id={block.id} className="scroll-mt-4">

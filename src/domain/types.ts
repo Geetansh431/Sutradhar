@@ -86,7 +86,12 @@ export type Vendor = {
 };
 
 export type PaymentDirection = 'in' | 'out';
-export type PaymentStatus = 'planned' | 'due' | 'paid' | 'overdue';
+/**
+ * `recurring` is a firm-level cost that repeats — salaries, rent. It is planned
+ * rather than gated to a client instalment, so it never counts as a coverage
+ * gap (spec §6.4; w09 shows the salary row with no "gated on" value).
+ */
+export type PaymentStatus = 'planned' | 'due' | 'paid' | 'overdue' | 'recurring';
 
 export type Payment = {
   id: EntityId;

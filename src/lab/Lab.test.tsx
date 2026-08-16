@@ -10,8 +10,9 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { describe, expect, it } from 'vitest';
+import { ALL_CASES } from '@/lab/blocks';
 import { Lab } from '@/lab/Lab';
-import { BLOCKS, CASES, STATES } from '@/lab/registry';
+import { BLOCKS, STATES } from '@/lab/registry';
 
 const render = (path: string) =>
   renderToStaticMarkup(
@@ -44,7 +45,7 @@ describe('/lab', () => {
 
   it('marks unbuilt cases rather than hiding them', () => {
     // Ten blocks x seven states, minus whatever is registered.
-    const expected = BLOCKS.length * STATES.length - CASES.length;
+    const expected = BLOCKS.length * STATES.length - ALL_CASES.length;
     const found = html.split('not built').length - 1;
     expect(found).toBe(expected);
   });

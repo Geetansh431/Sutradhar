@@ -23,6 +23,7 @@ export const ZERO = 0 as Paise;
 export const addPaise = (a: Paise, b: Paise): Paise => (a + b) as Paise;
 export const subPaise = (a: Paise, b: Paise): Paise => (a - b) as Paise;
 export const negPaise = (a: Paise): Paise => -a as Paise;
+export const absPaise = (a: Paise): Paise => Math.abs(a) as Paise;
 export const scalePaise = (a: Paise, factor: number): Paise => Math.round(a * factor) as Paise;
 export const comparePaise = (a: Paise, b: Paise): number => a - b;
 
