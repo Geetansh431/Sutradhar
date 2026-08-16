@@ -17,8 +17,17 @@ export type Onboarding = {
   step: OnboardingStep;
 };
 
-/** Six areas tracked on Firm Memory's coverage-by-area panel — spec §6.8. */
-export type CoverageArea = 'clients' | 'vendors' | 'team' | 'projects' | 'money' | 'files';
+/**
+ * The six areas on Firm Memory's coverage-by-area panel, named as
+ * `w10_firm_memory.png` labels them (spec §6.8).
+ */
+export type CoverageArea =
+  | 'projectsStages'
+  | 'moneyClientSide'
+  | 'moneyVendorSide'
+  | 'vendorsProfiles'
+  | 'teamLeaveSalary'
+  | 'companyFinances';
 
 export type CoverageByArea = Record<CoverageArea, number>;
 
@@ -59,7 +68,14 @@ export const useStore = create<Store>()(
     entities: {},
     documents: [],
     coverage: 0,
-    coverageByArea: { clients: 0, vendors: 0, team: 0, projects: 0, money: 0, files: 0 },
+    coverageByArea: {
+      projectsStages: 0,
+      moneyClientSide: 0,
+      moneyVendorSide: 0,
+      vendorsProfiles: 0,
+      teamLeaveSalary: 0,
+      companyFinances: 0,
+    },
     onboarding: { step: 'seed' },
     interviewAnswered: 0,
     demoSettled: false,
