@@ -16,6 +16,16 @@ export type OnboardingStep = 'seed' | 'extract' | 'interview' | 'done';
 
 export type Onboarding = {
   step: OnboardingStep;
+  /** Question ids the user has answered, and what they said. */
+  answered: Record<string, string>;
+  /**
+   * Question ids skipped, and how many times. "Skipping is recorded, and
+   * re-asked later at most twice" (§5.3) — so a question skipped twice stops
+   * being offered rather than nagging.
+   */
+  skipped: Record<string, number>;
+  /** Files that have finished ingesting, for the replayed animation. */
+  ingested: string[];
 };
 
 /**
@@ -86,6 +96,13 @@ export type Store = AppState & {
   confirmField: (id: EntityId, field: string, confirmedBy: string) => void;
   /** The demo's role switcher — §3.2, "two seeded logins ... visible switcher". */
   setCurrentUser: (id: EntityId) => void;
+  /** Records an interview answer and moves the coverage it unblocks. */
+  answerQuestion: (questionId: string, answer: string, area: CoverageArea) => void;
+  /** Records a skip. Twice and the question is retired (§5.3). */
+  skipQuestion: (questionId: string) => void;
+  /** Records a parsed file and adds the coverage its contents imply. */
+  markIngested: (fileId: string, adds: Partial<Record<CoverageArea, number>>) => void;
+  setOnboardingStep: (step: OnboardingStep) => void;
   pin: (screen: PinnedScreen) => void;
   unpin: (id: EntityId) => void;
 };
@@ -103,7 +120,7 @@ export const useStore = create<Store>()(
       teamLeaveSalary: 0,
       companyFinances: 0,
     },
-    onboarding: { step: 'seed' },
+    onboarding: { step: 'seed', answered: {}, skipped: {}, ingested: [] },
     interviewAnswered: 0,
     demoSettled: false,
     audit: [],
@@ -170,6 +187,43 @@ export const useStore = create<Store>()(
     setCurrentUser: (id) =>
       set((state) => {
         state.currentUserId = id;
+      }),
+
+    answerQuestion: (questionId, answer, area) =>
+      set((state) => {
+        state.onboarding.answered[questionId] = answer;
+        delete state.onboarding.skipped[questionId];
+        // Coverage moves because a gap was filled — the bar responding is the
+        // point of §6.8's "motivation is the point".
+        const current = state.coverageByArea[area];
+        state.coverageByArea[area] = Math.min(1, current + 0.04);
+        const areas = Object.values(state.coverageByArea);
+        state.coverage = areas.reduce((sum, value) => sum + value, 0) / areas.length;
+      }),
+
+    skipQuestion: (questionId) =>
+      set((state) => {
+        state.onboarding.skipped[questionId] = (state.onboarding.skipped[questionId] ?? 0) + 1;
+      }),
+
+    markIngested: (fileId, adds) =>
+      set((state) => {
+        // Idempotent: the replay may fire twice under StrictMode, and coverage
+        // must not double-count a file.
+        if (state.onboarding.ingested.includes(fileId)) return;
+        state.onboarding.ingested.push(fileId);
+
+        for (const [area, amount] of Object.entries(adds)) {
+          const key = area as CoverageArea;
+          state.coverageByArea[key] = Math.min(1, state.coverageByArea[key] + (amount ?? 0));
+        }
+        const areas = Object.values(state.coverageByArea);
+        state.coverage = areas.reduce((sum, value) => sum + value, 0) / areas.length;
+      }),
+
+    setOnboardingStep: (step) =>
+      set((state) => {
+        state.onboarding.step = step;
       }),
 
     pin: (screen) =>

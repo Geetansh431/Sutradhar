@@ -1,12 +1,27 @@
 import { useEffect, useRef } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router';
 import { Shell } from '@/chrome/Shell';
 import { buildState, readScenarioFromUrl } from '@/fixtures/scenarios';
 import { Lab } from '@/lab/Lab';
 import { Canvas } from '@/screens/Canvas';
 import { Home } from '@/screens/Home';
 import { Money } from '@/screens/Money';
+import { Onboarding } from '@/screens/Onboarding';
 import { useStore } from '@/store/store';
+
+/**
+ * A firm that has ingested nothing belongs in onboarding — the demo's 0:30
+ * beat — rather than looking at an empty Home.
+ *
+ * The `?s=` query is carried across, because it is what seeds the store: a
+ * redirect that dropped it would silently reseed the demo as `live` on the next
+ * refresh, showing the wrong firm at the opening.
+ */
+function OnboardingGate() {
+  const step = useStore((s) => s.onboarding.step);
+  const { search } = useLocation();
+  return step === 'seed' ? <Navigate to={`/onboarding${search}`} replace /> : <Home />;
+}
 
 /**
  * Seeds the store from `?s=`. State is in memory and resets on refresh — this is
@@ -31,8 +46,9 @@ export function App() {
       <Routes>
         {/* Screens render inside the shell — rail, topbar, ask bar. */}
         <Route element={<Shell />}>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<OnboardingGate />} />
           <Route path="/money" element={<Money />} />
+          <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/canvas" element={<Canvas />} />
           <Route path="/canvas/:questionId" element={<Canvas />} />
         </Route>
@@ -40,8 +56,8 @@ export function App() {
         {/* /lab is a review surface, deliberately outside the chrome. */}
         <Route path="/lab" element={<Lab />} />
         <Route path="/lab/:section" element={<Lab />} />
-        {/* Home, Money and /lab exist so far. The rest of the eight land here
-            as they are built (§4.1); the catch-all goes with the last of them. */}
+        {/* Home, Money, Canvas, Onboarding and /lab exist so far. The rest of
+            the eight land here as they are built (§4.1). */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
