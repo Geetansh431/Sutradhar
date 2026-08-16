@@ -58,7 +58,7 @@ const barHeight = (amount: Paise, peak: Paise, max: number): number => {
 };
 
 /** One column per payment. Must match the `width` each `Bar` renders at. */
-const columnWidthFor = (compact: boolean) => (compact ? 34 : 72);
+const columnWidthFor = (compact: boolean) => (compact ? 40 : 72);
 /** Half the plot: the axis sits at this offset, inflow above, outflow below. */
 const halfHeightFor = (compact: boolean) =>
   (compact ? COMPACT_MAX_BAR : MAX_BAR) + (compact ? 16 : 18);
@@ -198,14 +198,19 @@ function Bar({
         )}
       </div>
 
-      <span
-        className={cn(
-          'mt-1 whitespace-nowrap text-[0.6875rem] leading-none',
-          due && isToday(due) ? 'font-medium text-brand' : 'text-faint',
-        )}
-      >
-        {due ? formatShortDate(due) : '—'}
-      </span>
+      {/* The compact miniature drops the date axis: at 34px a label cannot fit,
+          and overlapping dates read worse than none. w06 shows it this way, with
+          the gap stated in words underneath. */}
+      {compact ? null : (
+        <span
+          className={cn(
+            'mt-1 whitespace-nowrap text-[0.6875rem] leading-none',
+            due && isToday(due) ? 'font-medium text-brand' : 'text-faint',
+          )}
+        >
+          {due ? formatShortDate(due) : '—'}
+        </span>
+      )}
     </div>
   );
 }
