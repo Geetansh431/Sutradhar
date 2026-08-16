@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 import { buildState, readScenarioFromUrl } from '@/fixtures/scenarios';
 import { Lab } from '@/lab/Lab';
+import { Money } from '@/screens/Money';
 import { useStore } from '@/store/store';
 
 /**
@@ -25,11 +26,12 @@ export function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/money" element={<Money />} />
         <Route path="/lab" element={<Lab />} />
         <Route path="/lab/:section" element={<Lab />} />
-        {/* Only /lab exists so far. The eight destinations land here as they are
-            built (spec §4.1), and this catch-all goes with the last of them. */}
-        <Route path="*" element={<Navigate to="/lab" replace />} />
+        {/* Money and /lab exist so far. The remaining destinations land here as
+            they are built (spec §4.1); the catch-all goes with the last of them. */}
+        <Route path="*" element={<Navigate to="/money" replace />} />
       </Routes>
     </BrowserRouter>
   );

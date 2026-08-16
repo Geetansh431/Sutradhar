@@ -12,7 +12,7 @@
  */
 
 import type { Entity, EntityId, Payment, PaymentDirection } from '@/domain/types';
-import { addDays, daysFromToday, TODAY } from '@/lib/dates';
+import { addDays, daysFromToday, formatShortDate, TODAY } from '@/lib/dates';
 import {
   type Confirmed,
   type FieldValue,
@@ -21,7 +21,7 @@ import {
   type Total,
   totalMoney,
 } from '@/lib/field';
-import { addPaise, comparePaise, type Paise, ZERO } from '@/lib/money';
+import { addPaise, comparePaise, formatINR, type Paise, ZERO } from '@/lib/money';
 import type { EntityTable } from '@/store/store';
 
 /**
@@ -261,3 +261,21 @@ export const confirmedAmounts = (payments: TimelinePayment[]): Confirmed<Paise>[
 
 /** "in 2 days", for the warning strip and tooltips. */
 export const daysUntil = (iso: string): number => daysFromToday(iso);
+
+/**
+ * The warning strip's sentence (spec §6.4): "one sentence stating the gap in
+ * plain language". w09 words it as a shortfall over a date range, and the
+ * product's tone rule is to state consequence rather than status — so this
+ * names what is not covered, not merely that a gap exists.
+ */
+export function gapSentence(gap: CoverageGap): string {
+  const span =
+    gap.from === gap.to
+      ? formatShortDate(gap.from)
+      : `${formatShortDate(gap.from)} – ${formatShortDate(gap.to)}`;
+  const scheduled =
+    comparePaise(gap.inflow, ZERO) > 0
+      ? `Only ${formatINR(gap.inflow)} of inflow is scheduled against it.`
+      : 'No inflow is scheduled against it.';
+  return `${formatINR(gap.outflow)} due to vendors, ${span}. ${scheduled}`;
+}
