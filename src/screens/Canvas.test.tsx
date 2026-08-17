@@ -192,6 +192,22 @@ describe('when the Canvas cannot answer — §7.7', () => {
     expect(html).toContain('inherited from the task above');
   });
 
+  it('the July question composes block 06 and nets the month', () => {
+    const html = text(render('july-across-projects'));
+    expect(html).toContain('-₹2,15,000');
+    expect(html).toContain('net across the firm in July');
+    // This file's `text()` leaves entities escaped, and "P&L" is one.
+    expect(html).toContain('Project P&amp;L');
+    expect(html).toContain('Kormangala');
+  });
+
+  it('scopes the timeline to July rather than the default window', () => {
+    // A timeline of August under a report about July would be two answers.
+    const html = text(render('july-across-projects'));
+    expect(html).toContain('1 Jul');
+    expect(html).not.toContain('11 Oct');
+  });
+
   it('an unknown question offers what can be asked instead', () => {
     const html = render('what-is-the-weather');
     expect(text(html)).toContain('Nothing canned matches that');

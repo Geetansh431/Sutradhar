@@ -16,10 +16,12 @@ import { Chart } from '@/blocks/Chart';
 import { DataGrid, FieldCell, type GridColumn } from '@/blocks/DataGrid';
 import { MoneyTimeline } from '@/blocks/MoneyTimeline';
 import { paymentColumns, uncoveredIds } from '@/blocks/paymentColumns';
+import { Report } from '@/blocks/Report';
 import { TaskTree } from '@/blocks/TaskTree';
 import type { BlockRef } from '@/canvas/plan';
 import type { EvidenceCard, ResolvedAnswer } from '@/canvas/resolver';
 import { moneyWindow } from '@/domain/selectors/money';
+import { buildReport } from '@/domain/selectors/report';
 import { taskTree } from '@/domain/selectors/tasks';
 import type { VendorExposure } from '@/domain/selectors/vendors';
 import { exposureShares, vendorExposure } from '@/domain/selectors/vendors';
@@ -74,6 +76,7 @@ const blockKey = (block: BlockRef): string => {
   if (block.block === 'money-timeline') return `money-timeline-${block.window}`;
   if (block.block === 'gap') return `gap-${block.area}`;
   if (block.block === 'task-tree') return `task-tree-${block.projectId}`;
+  if (block.block === 'report') return `report-${block.template}`;
   return block.block;
 };
 
@@ -117,8 +120,36 @@ function PlannedBlock({ block, entities }: { block: BlockRef; entities: EntityTa
       );
     }
 
-    case 'money-timeline':
-      return <MoneyTimeline days={block.window} stateOverride={{ entities }} />;
+    case 'money-timeline': {
+      // A `due between` filter scopes the window to a period, so a timeline
+      // under a report about July shows July rather than the default 60 days
+      // from today. Dates only — the schema forbids a figure here.
+      const between = block.query.where.find(
+        (clause) => clause.field === 'due' && clause.op === 'between',
+      );
+      const from = Array.isArray(between?.value) ? between.value[0] : undefined;
+
+      return (
+        <MoneyTimeline
+          days={block.window}
+          {...(from ? { from } : {})}
+          stateOverride={{ entities }}
+        />
+      );
+    }
+
+    case 'report':
+      // Read-only here: the Canvas is answering one question, and changing the
+      // template would be asking a different one. `buildReport` because the
+      // Canvas already applied the role cut before resolving.
+      return (
+        <Report
+          report={buildReport({ entities }, block.template, {
+            ...(block.period ? { period: block.period } : {}),
+            ...(block.scope?.kind === 'project' ? { projectId: block.scope.id } : {}),
+          })}
+        />
+      );
 
     case 'task-tree': {
       const project = entities[block.projectId];

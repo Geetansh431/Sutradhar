@@ -14,9 +14,11 @@ import { Ledger, LedgerLoading } from '@/blocks/Ledger';
 import { MoneyTimeline, MoneyTimelineLoading } from '@/blocks/MoneyTimeline';
 import { paymentColumns, uncoveredIds } from '@/blocks/paymentColumns';
 import { fieldRow, plainRow, RecordCard, RecordCardLoading } from '@/blocks/RecordCard';
+import { Report, ReportLoading } from '@/blocks/Report';
 import { TaskTree, TaskTreeLoading } from '@/blocks/TaskTree';
 import { type MoneyState, moneyWindow } from '@/domain/selectors/money';
 import { ledgerFor } from '@/domain/selectors/people';
+import { type ReportTemplate, runReport, TEMPLATE_LABEL } from '@/domain/selectors/report';
 import { type TaskNode, taskTree } from '@/domain/selectors/tasks';
 import { exposureShares, vendorExposure } from '@/domain/selectors/vendors';
 import type { Payment } from '@/domain/types';
@@ -982,6 +984,103 @@ export const TASK_TREE_CASES: LabCase[] = [
   },
 ];
 
+/**
+ * Block 06's cases.
+ *
+ * A report holds no `FieldValue` of its own — it holds totals computed from
+ * them — so the three field states are shown where they actually surface: an
+ * excluded unconfirmed figure in the total's caveat, a conflicting amount that
+ * the same exclusion swallows, and a salary nobody has filed.
+ */
+const REPORT_STATE = { entities: LIVE.entities, currentUserId: 'person-anil' };
+
+/** The four fixed templates, as the block's parameter controls (§8.1). */
+const REPORT_TEMPLATES = (Object.keys(TEMPLATE_LABEL) as ReportTemplate[]).map((id) => ({
+  id,
+  label: TEMPLATE_LABEL[id],
+}));
+
+export const REPORT_CASES: LabCase[] = [
+  {
+    block: '06-report',
+    state: 'loading',
+    note: 'title, then rows',
+    render: () => <ReportLoading />,
+  },
+  {
+    block: '06-report',
+    state: 'empty',
+    note: 'a period with nothing in it — says so, does not render a zero',
+    render: () => (
+      <Report
+        report={runReport(REPORT_STATE, 'project-pnl', {
+          period: { from: '2026-01-01', to: '2026-01-31' },
+        })}
+      />
+    ),
+  },
+  {
+    block: '06-report',
+    state: 'populated',
+    note: 'July across all projects — the answer july-across-projects composes',
+    render: () => (
+      <Report
+        report={runReport(REPORT_STATE, 'project-pnl', {
+          period: { from: '2026-07-01', to: '2026-07-31' },
+        })}
+        templates={REPORT_TEMPLATES}
+        onChangeTemplate={() => {}}
+      />
+    ),
+  },
+  {
+    block: '06-report',
+    state: 'unconfirmed',
+    note: "vendor exposure — Kumar's figure is off a photographed bill, and the total says so",
+    render: () => <Report report={runReport(REPORT_STATE, 'vendor-exposure')} />,
+  },
+  {
+    block: '06-report',
+    state: 'conflicting',
+    note: 'a disputed amount is excluded by the same rule as any unconfirmed one',
+    render: () => {
+      const entities = { ...LIVE.entities };
+      const bill = entities['payment-sharma-running-bill'];
+      if (bill?.kind === 'payment') {
+        entities[bill.id] = {
+          ...bill,
+          amount: {
+            state: 'conflicting',
+            candidates: [
+              { value: rupees(80000), source: { kind: 'document', id: 'd', label: 'Bill' } },
+              { value: rupees(85000), source: { kind: 'message', id: 'm', label: 'WhatsApp' } },
+            ],
+          },
+        };
+      }
+      return (
+        <Report report={runReport({ entities, currentUserId: 'person-anil' }, 'vendor-exposure')} />
+      );
+    },
+  },
+  {
+    block: '06-report',
+    state: 'missing',
+    note: 'the salary sheet names how many people it could not price',
+    render: () => <Report report={runReport(REPORT_STATE, 'salary-sheet')} />,
+  },
+  {
+    block: '06-report',
+    state: 'restricted',
+    note: 'Team — every template here is money, so none is computed',
+    render: () => (
+      <Report
+        report={runReport({ entities: LIVE.entities, currentUserId: 'person-ravi' }, 'ageing')}
+      />
+    ),
+  },
+];
+
 export const ALL_CASES: LabCase[] = [
   ...MONEY_TIMELINE_CASES,
   ...DATA_GRID_CASES,
@@ -990,4 +1089,5 @@ export const ALL_CASES: LabCase[] = [
   ...RECORD_CARD_CASES,
   ...LEDGER_CASES,
   ...TASK_TREE_CASES,
+  ...REPORT_CASES,
 ];

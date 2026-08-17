@@ -1,6 +1,6 @@
 # Sutradhar — build state and handoff
 
-**Last updated:** 17 August 2026 · at commit `5353d41` · 378 tests passing · working tree clean
+**Last updated:** 17 August 2026 · at commit `1c77ac0`+ · 395 tests passing · working tree clean
 
 This document exists so a new session can continue without re-deriving context. It says what
 the thing is, what is built, what is not, and what to do next. `CLAUDE.md` holds the rules;
@@ -127,7 +127,7 @@ That test passes no override, so it asserts on the screens' static headings rath
 
 ---
 
-## Built — blocks (7 of 10)
+## Built — blocks (8 of 10)
 
 The vocabulary is closed at ten (`CLAUDE.md` rule 7). Each built block appears in `/lab` in all
 seven states: loading, empty, populated, one unconfirmed field, one conflicting field, one
@@ -139,20 +139,20 @@ missing field, role-restricted.
 | 02 | Data grid | `src/blocks/DataGrid.tsx` | Generic over `TRow`; owns `FieldCell`, the single place a stored figure becomes text — so provenance and `.fv-*` come for free everywhere |
 | 03 | Money timeline | `src/blocks/MoneyTimeline.tsx` | Continuous axis, IN/OUT gutter, dash-bounded gap band. Compact variant drops the date axis (labels overlapped at 34px) |
 | 04 | Ledger | `src/blocks/Ledger.tsx` | Mark-paid emits a `settle` op and is **not offered** on an unconfirmed amount — a guess cannot be settled |
+| 06 | Report | `src/blocks/Report.tsx` | Four fixed templates, parameters only. `buildReport` skips the role check for callers that already made it; `runReport` applies it |
 | 07 | Chart | `src/blocks/Chart.tsx` | `'bar' \| 'hbar' \| 'timeline' \| 'stacked'` as a closed union |
 | 08 | Task tree | `src/blocks/TaskTree.tsx` | Nests to any depth, drag to re-parent, `treeitem` roles with a roving tabindex. `highlightIds` lets the Canvas show which rows an answer is about |
 | 09 | Change preview | `src/blocks/ChangePreview.tsx` | `changeTag` derives NEW/EDIT/LINK/ARCHIVE from the op, so DELETE is unrepresentable. ⌘↵ confirms |
 
-### Not built (3)
+### Not built (2)
 
 | # | Block | Blocks what |
 |---|---|---|
 | 05 | Document viewer | The source with its passage highlighted. Wanted for its own sake — Files now lists documents but nothing opens one |
-| 06 | Report | Fixed templates only. Wanted by `july-across-projects` |
 | 10 | Gap | What is missing here and what it blocks. Firm Memory currently renders gaps inline |
 
 `/lab` renders unbuilt blocks as explicit "not built" tiles rather than omitting them, and the
-header reads "7 of 10 blocks built" off `BLOCKS.length` — so the counter cannot drift.
+header reads "8 of 10 blocks built" off `BLOCKS.length` — so the counter cannot drift.
 
 ---
 
@@ -207,7 +207,23 @@ late. A task can be behind where it should be and not yet overdue; only the site
 **Cost is real when work is ordered, not when the cheque clears.** `Project.committed` holds
 work owed but unbilled, and margin subtracts it alongside `spent`. Margin from `spent` alone
 flatters every project mid-execution — which is exactly the blindness the change-order story is
-about. See pending item #1: this is also where the demo diverges from w08's 12.4%.
+about.
+
+**Margin: 37.0% on Iyer, and w08's 12.4% is wrong. Decided 17 Aug 2026 — do not re-open.**
+No combination of the figures w08 prints in that same row produces 12.4%: value ₹18,40,000,
+received ₹9,20,000, spent ₹7,10,000 give 11.4% as `(received − spent) / value` and 61.4% as
+`(value − spent) / value`. §6.3 names the field but never defines it, and no §10 beat turns on
+the number, so the wireframe loses here — the one place it does, because its own numbers
+contradict it. Margin is `(value − spent − committed) / value`; Iyer's ₹4,50,000 committed is
+its three open outflows on w09 (Sharma ₹80,000 + ₹2,00,000, Godrej ₹1,70,000), so every term
+traces to a payment the demo already shows. Full reasoning in the header of
+`src/domain/selectors/workspace.ts`.
+
+**July is closed history; August is the demo.** Six `paid` July payments exist so
+`july-across-projects` has a real month to report on. They are all settled and all dated before
+`TODAY`, so no August figure moves — but two guardrail tests had assumed every payment was
+either scheduled-ahead or overdue, and `paid` is a third category. If a test starts failing on a
+count of payments, check whether it means *open* payments.
 
 **One fixture conflict, resolved and documented** in `firm.ts`'s header: w09 puts Godrej's
 payment at ₹1,70,000 and builds the coverage gap on it; w11's exposure column says ₹1,50,000.
@@ -222,21 +238,26 @@ The planner returns a **plan** — block types, entity refs, filters. Never a va
 the build even if the figure is correct. The resolver fills values from the store and builds
 mandatory caveats naming each unconfirmed figure.
 
-Eight canned questions in `questions.ts`, covering all six §5.4 shapes. **Five have plans:**
+Eight canned questions in `questions.ts`, covering all six §5.4 shapes. **Six have plans, five
+answer fully:**
 
 | Question | Group | Status |
 |---|---|---|
 | `vendor-exposure` | money | ✅ the 2:30 beat |
 | `uncovered-payments` | money | ✅ |
 | `owed-to-sharma` | money | ✅ |
-| `vendors-without-terms` | people | ✅ |
+| `vendors-without-terms` | people | ⚠️ plan resolves, but its only block is 10 — the working area currently reads "Gap block (10) is not built yet" |
 | `kormangala-handover` | projects | ✅ composes block 08 |
-| `july-across-projects` | money | ⛔ no plan — wants block 06 |
+| `july-across-projects` | money | ✅ composes block 06 |
 | `iyer-margin` | projects | ⛔ no plan — see the margin note below |
 | `sharma-bill-capture` | capture | ↪ not unanswered — takes the capture path (§7.6) |
 
-`CoPanel` renders `data-grid`, `chart`, `money-timeline` and `task-tree`. A plan naming a block
-it cannot draw says so rather than rendering nothing.
+`CoPanel` renders `data-grid`, `chart`, `money-timeline`, `task-tree` and `report`. A plan naming
+a block it cannot draw says so rather than rendering nothing.
+
+**A headline must lead with `{metric}`.** The co-panel lifts the figure into the large line and
+renders the remainder as the subtitle, so "July closed at {metric} across the firm" renders as
+"July closed at across the firm". Put the placeholder first.
 
 Refusal is not one state but **four**, each with its own copy — `CannotAnswer` in
 `src/chrome/canvas/` takes `kind`:
@@ -247,7 +268,7 @@ Refusal is not one state but **four**, each with its own copy — `CannotAnswer`
 - `out-of-scope` — the role may not see this answer (§3.2)
 - `no-data` — the question is real and permitted, but we hold no plan (§7.7)
 
-So of the eight, **two are genuinely pending**, and each says so plainly rather than failing or
+So of the eight, **one is genuinely pending**, and each says so plainly rather than failing or
 faking it.
 
 **`ResolvedMetric.value` is a discriminated union, not `Paise`.** `days-behind-schedule` counts
@@ -264,40 +285,25 @@ badge is permanent.
 
 ## Pending work
 
-Ordered by what it buys the demo. **Everything the previous handoff listed is done** — block 08,
-the project workspace, `kormangala-handover`, and all three dead rail links.
+Ordered by what it buys the demo. **Everything the two previous handoffs listed is done** —
+block 08, the project workspace, `kormangala-handover`, all three dead rail links, block 06 and
+`july-across-projects`. The margin question is settled: 37.0%, recorded above, do not re-open.
 
-### 1. The margin figure — a decision, not a build
+### 1. Blocks 10 and 05
 
-w08's fact row reads **"Margin now 12.4%"** and no combination of the figures the same row prints
-produces it: value ₹18,40,000, received ₹9,20,000, spent ₹7,10,000 give 11.4% as
-`(received − spent) / value` and 61.4% as `(value − spent) / value`. §6.3 names the field but
-never defines it, and no §10 beat turns on the number.
+Neither unlocks a question — `iyer-margin` is the only one still without a plan, and it wants no
+block, just a decision about what a margin answer should say now that the figure is settled.
 
-Rather than reverse-engineer a fixture to land on 12.4%, margin is defined the way a design firm
-means it — value less what is paid out and less what is ordered but unbilled — and `committed`
-was added to `Project` to carry the second term. Iyer's ₹4,50,000 committed is its three open
-outflows on w09 (Sharma ₹80,000 + ₹2,00,000, Godrej ₹1,70,000), so the figure traces to payments
-the demo already shows.
-
-**Iyer reads 37.0%, not w08's 12.4%.** This is the one place a wireframe does not win, because
-here it cannot: its own numbers contradict it. The full reasoning is in the header of
-`src/domain/selectors/workspace.ts`. If the wireframe's figure matters more than the derivation,
-tune `committed` — but decide it deliberately.
-
-`iyer-margin` has no Canvas plan yet, and shouldn't get one until this is settled.
-
-### 2. Blocks 06, 10, 05
-
-Block 06 (report) unlocks `july-across-projects`, the last question wanting a block. Block 10
-(gap) unlocks nothing new but has an existing home — Firm Memory renders gaps inline today and
-would be tidier composing the block.
+**Block 10 is the higher-value of the two**, because one question is already half-answered
+without it: `vendors-without-terms` has a valid plan whose only block is a `gap`, so its working
+area currently reads "Gap block (10) is not built yet". It is the one place the demo shows its
+own scaffolding. Firm Memory also renders gaps inline today and would be tidier composing it.
 
 Block 05 (document viewer) is **not** required by `sharma-bill-capture`, which takes the capture
 path by design. It is wanted for its own sake, and Files now sharpens the case: the screen lists
 every document and says plainly that opening one needs a viewer that isn't built.
 
-### 3. Settings is thinner than §6.9
+### 2. Settings is thinner than §6.9
 
 §6.9 splits the screen into editable (stage names and order, vendor and cost categories, custom
 fields on any entity) and not-editable (folder conventions, users and roles), and says it "exists
@@ -311,11 +317,11 @@ five minutes — building editors nobody opens is the wrong trade at this stage.
 demonstrated. If a viewer asks "can I rename a stage?", there is nothing to show them. Worth
 building if that question comes up in a rehearsal.
 
-### 4. `/lab/type` font pairing
+### 3. `/lab/type` font pairing
 
 Open since SETUP.md day 2. The specimen page exists; the decision doesn't. Two CSS variables.
 
-### 5. Rail links drop `?s=`
+### 4. Rail links drop `?s=`
 
 Every rail link and the Projects → workspace link navigate without carrying the scenario query,
 so a refresh after clicking reseeds as `live`. Consistent across the whole app and harmless

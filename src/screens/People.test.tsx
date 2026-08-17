@@ -84,9 +84,18 @@ describe('the ledger — block 04', () => {
   const ledger = ledgerFor(state, 'vendor-sharma');
 
   it('runs a balance across the entity’s unpaid lines', () => {
-    expect(ledger.lines).toHaveLength(2);
+    // Paid lines are shown — §8.1 says a ledger holds "planned, due, paid,
+    // outstanding" — but they do not move the balance. Sharma's July bill is
+    // settled, so the running total still lands on w11's open exposure.
+    const unpaid = ledger.lines.filter((line) => line.status !== 'paid');
+    expect(unpaid).toHaveLength(2);
     const last = ledger.lines[ledger.lines.length - 1];
     expect(last && formatINR(last.balance)).toBe('₹2,80,000');
+  });
+
+  it('shows settled history without letting it touch the outstanding total', () => {
+    expect(ledger.lines.some((line) => line.status === 'paid')).toBe(true);
+    expect(formatINR(ledger.outstanding.value)).toBe('₹2,80,000');
   });
 
   it('sorts by date', () => {

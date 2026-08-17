@@ -59,10 +59,11 @@ describe('w08 — project workspace', () => {
 
 describe('w09 — money', () => {
   it('the payment grid is these six rows, in this order', () => {
-    // The grid is the next 60 days; the two overdue bills that make up the rest
-    // of each vendor's exposure (w11) sit before it and are excluded here.
+    // The grid is the next 60 days. Excluded: the two overdue bills that make
+    // up the rest of each vendor's exposure (w11) and sit before it, and July's
+    // settled history, which exists for `july-across-projects` and is closed.
     const rows = payments
-      .filter((p) => p.status !== 'overdue')
+      .filter((p) => p.status !== 'overdue' && p.status !== 'paid')
       .map((p) => ({
         id: p.id,
         due: p.due.state === 'confirmed' ? p.due.value : null,
@@ -122,6 +123,9 @@ describe('the demo timeline, against the fixed today', () => {
       // Overdue bills are deliberately behind us: they are what the firm has
       // not paid, and they are the bulk of w11's vendor exposure.
       if (p.status === 'overdue') continue;
+      // Settled July history is behind us by definition — it is what a closed
+      // month looks like, and `july-across-projects` reports on it.
+      if (p.status === 'paid') continue;
       if (p.due.state === 'confirmed') {
         expect(daysFromToday(p.due.value), `${p.id} is in the past`).toBeGreaterThanOrEqual(0);
       }

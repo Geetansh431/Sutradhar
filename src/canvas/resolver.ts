@@ -15,6 +15,7 @@
 
 import type { BlockRef, CanvasPlan, MetricRef } from '@/canvas/plan';
 import { moneyWindow } from '@/domain/selectors/money';
+import { buildReport } from '@/domain/selectors/report';
 import { scheduleView } from '@/domain/selectors/tasks';
 import { vendorExposure } from '@/domain/selectors/vendors';
 import type { Document, EntityId } from '@/domain/types';
@@ -113,10 +114,38 @@ function resolveMetric(state: ResolverState, ref: MetricRef): ResolvedMetric {
       };
     }
 
+    case 'period-in-out': {
+      // The net for a period. Without a period there is nothing to sum over,
+      // so the metric declines rather than defaulting to a window nobody asked
+      // for — a total whose bounds are guessed is worse than no total.
+      if (!ref.period) {
+        return {
+          value: money(ZERO),
+          display: '—',
+          hasUnconfirmed: false,
+          unconfirmedLabels: [],
+        };
+      }
+
+      // `buildReport`, not `runReport`: the Canvas gates on `canSeeMoney`
+      // before it resolves anything, so the cut is already made upstream.
+      const report = buildReport({ entities: state.entities }, 'project-pnl', {
+        period: ref.period,
+      });
+      const net = report.total?.value ?? ZERO;
+      const excluded = report.total?.excludedCount ?? 0;
+
+      return {
+        value: money(net),
+        display: formatINR(net),
+        hasUnconfirmed: excluded > 0,
+        unconfirmedLabels: excluded > 0 ? [`${excluded} in this period`] : [],
+      };
+    }
+
     case 'collectible-this-week':
     case 'payable-next-14-days':
-    case 'project-margin':
-    case 'period-in-out': {
+    case 'project-margin': {
       // Planned for, not yet resolved. Returning zero would be a fabricated
       // number, so the Canvas treats an unresolved metric as a gap instead.
       return {

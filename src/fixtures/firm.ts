@@ -797,6 +797,127 @@ const payments: Payment[] = [
     gatedOn: null,
     archivedAt: null,
   },
+
+  // ── July, closed ──────────────────────────────────────────────────────
+  // A settled month, so `july-across-projects` has a real answer: money in
+  // and out across three projects, netting positive, with the firm-level
+  // salary run as the line that belongs to no project. All `paid` and all
+  // dated before the demo — none of these touches an August figure a beat
+  // depends on. Confirmed throughout: a closed month is one someone has
+  // already reconciled, which is exactly what makes August's dotted figures
+  // read as unusual rather than normal.
+
+  {
+    id: 'payment-iyer-instalment-2',
+    kind: 'payment',
+    direction: 'in',
+    projectId: 'project-iyer',
+    counterpartyId: 'client-iyer',
+    amount: {
+      ...confirmedBy(doc('doc-payments-master', 'Payments_Master.xlsx', 'Iyer, inst. 2')),
+      value: rupees(450000),
+    },
+    due: {
+      ...confirmedBy(doc('doc-payments-master', 'Payments_Master.xlsx', 'Iyer, inst. 2')),
+      value: '2026-07-08',
+    },
+    status: 'paid',
+    gatedOn: null,
+    archivedAt: null,
+  },
+  {
+    id: 'payment-kormangala-instalment-2',
+    kind: 'payment',
+    direction: 'in',
+    projectId: 'project-kormangala',
+    counterpartyId: 'client-kormangala',
+    amount: {
+      ...confirmedBy(doc('doc-payments-master', 'Payments_Master.xlsx', 'Kormangala, inst. 2')),
+      value: rupees(350000),
+    },
+    due: {
+      ...confirmedBy(doc('doc-payments-master', 'Payments_Master.xlsx', 'Kormangala, inst. 2')),
+      value: '2026-07-15',
+    },
+    status: 'paid',
+    gatedOn: null,
+    archivedAt: null,
+  },
+  {
+    id: 'payment-sharma-july',
+    kind: 'payment',
+    direction: 'out',
+    projectId: 'project-iyer',
+    counterpartyId: 'vendor-sharma',
+    amount: {
+      ...confirmedBy(doc('doc-payments-master', 'Payments_Master.xlsx', 'Sharma, July')),
+      value: rupees(160000),
+    },
+    due: {
+      ...confirmedBy(doc('doc-payments-master', 'Payments_Master.xlsx', 'Sharma, July')),
+      value: '2026-07-12',
+    },
+    status: 'paid',
+    gatedOn: null,
+    archivedAt: null,
+  },
+  {
+    id: 'payment-kumar-july',
+    kind: 'payment',
+    direction: 'out',
+    projectId: 'project-kormangala',
+    counterpartyId: 'vendor-kumar-carpentry',
+    amount: {
+      ...confirmedBy(doc('doc-payments-master', 'Payments_Master.xlsx', 'Kumar, July')),
+      value: rupees(140000),
+    },
+    due: {
+      ...confirmedBy(doc('doc-payments-master', 'Payments_Master.xlsx', 'Kumar, July')),
+      value: '2026-07-20',
+    },
+    status: 'paid',
+    gatedOn: null,
+    archivedAt: null,
+  },
+  {
+    id: 'payment-godrej-july',
+    kind: 'payment',
+    direction: 'out',
+    projectId: 'project-iyer',
+    counterpartyId: 'vendor-godrej-dealer',
+    amount: {
+      ...confirmedBy(doc('doc-payments-master', 'Payments_Master.xlsx', 'Godrej, July')),
+      value: rupees(95000),
+    },
+    due: {
+      ...confirmedBy(doc('doc-payments-master', 'Payments_Master.xlsx', 'Godrej, July')),
+      value: '2026-07-22',
+    },
+    status: 'paid',
+    gatedOn: null,
+    archivedAt: null,
+  },
+  {
+    // The anomaly the report names: a firm-level cost carried by no project,
+    // so it appears in no project's margin (§9.3 — say the consequence).
+    id: 'payment-team-salaries-jul',
+    kind: 'payment',
+    direction: 'out',
+    projectId: null,
+    counterpartyId: null,
+    label: 'Team salaries',
+    amount: {
+      ...confirmedBy(human('Anil Kumar', 'onboarding interview')),
+      value: rupees(420000),
+    },
+    due: {
+      ...confirmedBy(human('Anil Kumar', 'onboarding interview')),
+      value: '2026-07-31',
+    },
+    status: 'paid',
+    gatedOn: null,
+    archivedAt: null,
+  },
 ];
 
 // ── Tasks ───────────────────────────────────────────────────────────────

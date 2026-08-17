@@ -219,6 +219,62 @@ const PLANS: Record<string, unknown> = {
       'Same view for Iyer Residence',
     ],
   },
+
+  /**
+   * "Show me July across all projects" — the §5.4 period shape.
+   *
+   * A closed month, so the figures are settled rather than planned. The
+   * narrative carries what the question promises past in/out/net: the anomaly.
+   * Per project July looks unremarkable; the salary run is what turns the month
+   * negative, and it belongs to no project so it appears in no project's margin.
+   */
+  'july-across-projects': {
+    questionId: 'july-across-projects',
+    answer: {
+      // The figure leads: the co-panel lifts `{metric}` into the large line and
+      // renders the remainder as the subtitle, so a headline that buries it
+      // mid-sentence leaves a gap where the number was.
+      headline: '{metric} net across the firm in July',
+      metric: {
+        metric: 'period-in-out',
+        scope: null,
+        period: { from: '2026-07-01', to: '2026-07-31' },
+      },
+    },
+    narrative: [
+      'Both live projects took money in and paid vendors out, and each of them looks roughly level on its own. The month is negative because of a cost neither of them carries.',
+      'The salary run belongs to no project, so it lands in no project’s margin — and it is the cost most often left out when quoting the next job.',
+    ],
+    caveats: [],
+    working: [
+      {
+        block: 'report',
+        template: 'project-pnl',
+        scope: null,
+        period: { from: '2026-07-01', to: '2026-07-31' },
+      },
+      {
+        // Scoped to July by the query, not the default 60-day window — a
+        // timeline of August under a report about July would be two answers.
+        block: 'money-timeline',
+        query: {
+          from: 'payments',
+          where: [{ field: 'due', op: 'between', value: ['2026-07-01', '2026-07-31'] }],
+        },
+        window: 31,
+      },
+    ],
+    evidence: ['doc-payments-master', 'human-anil-kumar'],
+    actions: [
+      { label: 'Export CSV', intent: 'export', target: null },
+      { label: 'Pin this view', intent: 'pin', target: null },
+    ],
+    followUps: [
+      'Same view for August',
+      'Which vendors did we pay most in July?',
+      'What did each project actually earn?',
+    ],
+  },
 };
 
 /**

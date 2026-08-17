@@ -60,6 +60,10 @@ export const BlockRef = z.discriminatedUnion('block', [
     block: z.literal('report'),
     template: z.enum(['project-pnl', 'vendor-exposure', 'ageing', 'salary-sheet']),
     scope: EntityRef.nullable(),
+    // §8.1 gives the report block three parameters — period, project, entity —
+    // and `scope` covers the latter two. Dates only: a period is a filter, not
+    // a figure, so this does not let a plan smuggle a value through.
+    period: z.object({ from: z.string(), to: z.string() }).nullable(),
   }),
   z.object({
     block: z.literal('chart'),
