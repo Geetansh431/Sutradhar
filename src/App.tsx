@@ -4,6 +4,7 @@ import { Shell } from '@/chrome/Shell';
 import { buildState, readScenarioFromUrl } from '@/fixtures/scenarios';
 import { Lab } from '@/lab/Lab';
 import { Canvas } from '@/screens/Canvas';
+import { FirmMemory } from '@/screens/FirmMemory';
 import { Home } from '@/screens/Home';
 import { Money } from '@/screens/Money';
 import { Onboarding } from '@/screens/Onboarding';
@@ -49,6 +50,7 @@ export function App() {
           <Route path="/" element={<OnboardingGate />} />
           <Route path="/money" element={<Money />} />
           <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/memory" element={<FirmMemory />} />
           <Route path="/canvas" element={<Canvas />} />
           <Route path="/canvas/:questionId" element={<Canvas />} />
         </Route>

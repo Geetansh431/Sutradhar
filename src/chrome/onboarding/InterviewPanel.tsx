@@ -17,12 +17,17 @@ export function InterviewPanel({
   total,
   onAnswer,
   onSkip,
+  /** Firm Memory heads the same panel "Fill a gap" (§6.8). */
+  title,
+  subtitle,
 }: {
   questions: InterviewQuestion[];
   answered: Record<string, string>;
   total: number;
   onAnswer: (question: InterviewQuestion, option: string) => void;
   onSkip: (question: InterviewQuestion) => void;
+  title?: string;
+  subtitle?: string;
 }) {
   const answeredCount = Object.keys(answered).length;
 
@@ -30,13 +35,16 @@ export function InterviewPanel({
     <section className="rounded-md border border-brand">
       <header className="bg-brand-soft px-4 py-3">
         <h2 className="font-medium text-brand text-sm uppercase tracking-wide">
-          What I still need from you · {questions.length} of {total - answeredCount}
+          {title ?? 'What I still need from you'} ·{' '}
+          {subtitle ?? `${questions.length} of ${total - answeredCount}`}
         </h2>
       </header>
 
       <div className="space-y-3 p-4">
         <p className="text-mute text-sm">
-          Only you know these. {questions.length} at a time, 40 seconds.
+          {subtitle
+            ? 'Only you can answer these. Each one unblocks something concrete.'
+            : `Only you know these. ${questions.length} at a time, 40 seconds.`}
         </p>
 
         {questions.length === 0 ? (
