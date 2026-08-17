@@ -12,6 +12,7 @@
  */
 
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router';
 import { ChangePreview } from '@/blocks/ChangePreview';
 import { DataGrid, FieldCell, type GridColumn } from '@/blocks/DataGrid';
 import { type ModeOption, ModeSwitch } from '@/chrome/ModeSwitch';
@@ -59,7 +60,18 @@ const modesFor = (seesMoney: boolean): ModeOption<Mode>[] =>
 /** List mode's columns (§6.2). Money is dropped for a team member (§3.2). */
 const columnsFor = (seesMoney: boolean): GridColumn<ProjectRow>[] => {
   const columns: GridColumn<ProjectRow>[] = [
-    { id: 'name', header: 'Project', cell: (row) => row.name, sortValue: (row) => row.name },
+    {
+      id: 'name',
+      header: 'Project',
+      // The way into the workspace (§6.3). A pipeline card is an enquiry and
+      // has no workspace yet, so the link lives here rather than on the board.
+      cell: (row) => (
+        <Link to={`/projects/${row.id}`} className="text-ink hover:underline">
+          {row.name}
+        </Link>
+      ),
+      sortValue: (row) => row.name,
+    },
     { id: 'stage', header: 'Stage', cell: (row) => row.stage, sortValue: (row) => row.stage },
     {
       id: 'client',

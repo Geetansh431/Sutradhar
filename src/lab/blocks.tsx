@@ -14,8 +14,10 @@ import { Ledger, LedgerLoading } from '@/blocks/Ledger';
 import { MoneyTimeline, MoneyTimelineLoading } from '@/blocks/MoneyTimeline';
 import { paymentColumns, uncoveredIds } from '@/blocks/paymentColumns';
 import { fieldRow, plainRow, RecordCard, RecordCardLoading } from '@/blocks/RecordCard';
+import { TaskTree, TaskTreeLoading } from '@/blocks/TaskTree';
 import { type MoneyState, moneyWindow } from '@/domain/selectors/money';
 import { ledgerFor } from '@/domain/selectors/people';
+import { type TaskNode, taskTree } from '@/domain/selectors/tasks';
 import { exposureShares, vendorExposure } from '@/domain/selectors/vendors';
 import type { Payment } from '@/domain/types';
 import { buildState } from '@/fixtures/scenarios';
@@ -902,6 +904,84 @@ export const LEDGER_CASES: LabCase[] = [
   },
 ];
 
+/**
+ * The Iyer tree of w08, and a helper to bend one node into a field state.
+ *
+ * Deadlines are the only tracked field on a task, so the unconfirmed /
+ * conflicting / missing cases all act on one.
+ */
+const iyerTree = () => taskTree(LIVE, 'project-iyer');
+
+const withDeadline = (nodes: TaskNode[], id: string, deadline: TaskNode['deadline']): TaskNode[] =>
+  nodes.map((node) => ({
+    ...node,
+    ...(node.id === id ? { deadline } : {}),
+    children: withDeadline(node.children, id, deadline),
+  }));
+
+export const TASK_TREE_CASES: LabCase[] = [
+  {
+    block: '08-task-tree',
+    state: 'loading',
+    note: 'skeleton rows, indented like a tree',
+    render: () => <TaskTreeLoading />,
+  },
+  {
+    block: '08-task-tree',
+    state: 'empty',
+    note: 'no tasks yet — says what puts the first one here',
+    render: () => <TaskTree nodes={[]} subject="Kormangala Apartment" />,
+  },
+  {
+    block: '08-task-tree',
+    state: 'populated',
+    note: 'w08 exactly — four roots, the change order in accent, drag to re-parent',
+    render: () => (
+      <TaskTree
+        nodes={iyerTree()}
+        subject="Iyer Residence"
+        projectId="project-iyer"
+        onPropose={() => {}}
+      />
+    ),
+  },
+  {
+    block: '08-task-tree',
+    state: 'unconfirmed',
+    note: "Boards — inferred from Ravi's site note, so the date reads ≈ and dotted",
+    render: () => <TaskTree nodes={iyerTree()} subject="Iyer Residence" />,
+  },
+  {
+    block: '08-task-tree',
+    state: 'conflicting',
+    note: 'the site note and the work order disagree on when framing is due',
+    render: () => (
+      <TaskTree
+        nodes={withDeadline(iyerTree(), 'task-iyer-framing', {
+          state: 'conflicting',
+          candidates: [
+            { value: '2026-08-18', source: { kind: 'document', id: 'd', label: 'Work order' } },
+            { value: '2026-08-21', source: { kind: 'message', id: 'm', label: 'Ravi, site note' } },
+          ],
+        })}
+        subject="Iyer Residence"
+      />
+    ),
+  },
+  {
+    block: '08-task-tree',
+    state: 'missing',
+    note: 'Finishing has no deadline and nobody on it — two gaps, neither faked',
+    render: () => <TaskTree nodes={iyerTree()} subject="Iyer Residence" />,
+  },
+  {
+    block: '08-task-tree',
+    state: 'restricted',
+    note: 'Team on a project they are not on — the tree is not theirs to see',
+    render: () => <TaskTree nodes={iyerTree()} subject="Iyer Residence" restricted />,
+  },
+];
+
 export const ALL_CASES: LabCase[] = [
   ...MONEY_TIMELINE_CASES,
   ...DATA_GRID_CASES,
@@ -909,4 +989,5 @@ export const ALL_CASES: LabCase[] = [
   ...CHART_CASES,
   ...RECORD_CARD_CASES,
   ...LEDGER_CASES,
+  ...TASK_TREE_CASES,
 ];

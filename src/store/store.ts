@@ -7,7 +7,7 @@
 import { castDraft } from 'immer';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import type { Document, Entity, EntityId, EntityKind, EntityPatch } from '@/domain/types';
+import type { Document, Entity, EntityId, EntityKind, EntityPatch, SiteNote } from '@/domain/types';
 import { hoursFromNow, nowISO } from '@/lib/dates';
 import type { FieldValue } from '@/lib/field';
 import type { AuditEntry, Change, ChangeSet, UndoEntry } from './change';
@@ -67,6 +67,8 @@ export type PinnedScreen = {
 export type AppState = {
   entities: EntityTable;
   documents: Document[];
+  /** The project site feeds — §6.3. A feed, not entities; see `SiteNote`. */
+  siteNotes: SiteNote[];
   /** Overall coverage, 0..1 — the headline number on Home and Firm Memory. */
   coverage: number;
   coverageByArea: CoverageByArea;
@@ -111,6 +113,7 @@ export const useStore = create<Store>()(
   immer((set, get) => ({
     entities: {},
     documents: [],
+    siteNotes: [],
     coverage: 0,
     coverageByArea: {
       projectsStages: 0,

@@ -10,6 +10,7 @@ import { Money } from '@/screens/Money';
 import { Onboarding } from '@/screens/Onboarding';
 import { People } from '@/screens/People';
 import { Projects } from '@/screens/Projects';
+import { ProjectWorkspaceRoute } from '@/screens/ProjectWorkspace';
 import { useStore } from '@/store/store';
 
 /**
@@ -51,6 +52,7 @@ export function App() {
         <Route element={<Shell />}>
           <Route path="/" element={<OnboardingGate />} />
           <Route path="/projects" element={<Projects />} />
+          <Route path="/projects/:projectId" element={<ProjectWorkspaceRoute />} />
           <Route path="/money" element={<Money />} />
           <Route path="/people" element={<People />} />
           <Route path="/onboarding" element={<Onboarding />} />

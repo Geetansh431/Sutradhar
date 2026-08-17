@@ -47,6 +47,14 @@ export type Project = {
   likelihood: FieldValue<number> | null;
   received: FieldValue<Paise>[];
   spent: FieldValue<Paise>[];
+  /**
+   * Work ordered and owed but not yet paid out — spec §6.3's "margin now".
+   *
+   * Margin computed from `spent` alone flatters every project mid-execution,
+   * which is precisely the blindness the change-order story is about: the cost
+   * is real the moment the work is ordered, not the moment the cheque clears.
+   */
+  committed: FieldValue<Paise>[];
   handoverDate: FieldValue<string> | null;
   /**
    * When the project entered its current stage. Ageing is measured from here,
@@ -157,6 +165,26 @@ export type Document = {
 };
 
 export type Entity = Project | Person | Client | Vendor | Payment | Task | Document;
+
+/**
+ * A supervisor's post to the project's site feed — spec §6.3, w08.
+ *
+ * Deliberately *not* an `Entity`: `EntityKind` must match `EntityRef` in
+ * `canvas/plan.ts` exactly, and the canvas never plans over a site note. It is
+ * a feed the workspace reads, like `documents`, not something the firm's
+ * questions are asked about.
+ */
+export type SiteNote = {
+  id: EntityId;
+  projectId: EntityId;
+  /** Who posted it — a person on the team. */
+  authorId: EntityId;
+  /** ISO instant, so the feed sorts newest-first without a wall-clock read. */
+  at: string;
+  text: string;
+  /** How many photos came with it. The demo renders tiles, not real images. */
+  photoCount: number;
+};
 
 /** A partial write to one entity's own fields, keyed by field name. */
 export type EntityPatch = Record<string, unknown>;

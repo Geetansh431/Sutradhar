@@ -25,7 +25,16 @@
  * regenerate or "tidy" them.
  */
 
-import type { Client, Document, Payment, Person, Project, Task, Vendor } from '@/domain/types';
+import type {
+  Client,
+  Document,
+  Payment,
+  Person,
+  Project,
+  SiteNote,
+  Task,
+  Vendor,
+} from '@/domain/types';
 import type { SourceRef } from '@/lib/field';
 import { rupees } from '@/lib/money';
 import type { AppState, CoverageByArea, EntityTable } from '@/store/store';
@@ -221,6 +230,14 @@ const iyer: Project = {
       value: rupees(710000),
     },
   ],
+  // Ordered and owed, not yet paid: Sharma's ₹80,000 running bill and ₹2,00,000
+  // overdue, plus Godrej's ₹1,70,000. The three open Iyer outflows on w09.
+  committed: [
+    {
+      ...confirmedBy(doc('doc-payments-master', 'Payments_Master.xlsx', 'Iyer, open orders')),
+      value: rupees(450000),
+    },
+  ],
   handoverDate: {
     state: 'extracted',
     value: '2026-09-28',
@@ -264,6 +281,17 @@ const kormangala: Project = {
       confidence: 0.88,
     },
   ],
+  // Kumar's ₹1,10,000 planned and ₹1,02,000 overdue — the two open Kormangala
+  // outflows. Read off a photographed bill, so this figure is not confirmed and
+  // the margin that rests on it says so.
+  committed: [
+    {
+      state: 'extracted',
+      value: rupees(212000),
+      source: doc('doc-vendor-bills', 'Vendor bills (14 photos)', 'IMG_2244.jpg'),
+      confidence: 0.79,
+    },
+  ],
   handoverDate: { state: 'missing', blocks: ['calendar', 'handover countdown'] },
   stageSince: '2026-07-25',
   ownerId: 'person-ravi',
@@ -288,6 +316,7 @@ const hsrVilla: Project = {
   likelihood: null,
   received: [],
   spent: [],
+  committed: [],
   handoverDate: { state: 'missing', blocks: ['calendar'] },
   stageSince: '2026-08-01',
   ownerId: ADMIN,
@@ -310,6 +339,7 @@ const pipeline: Project[] = [
     likelihood: { ...confirmedBy(human('Anil Kumar', 'onboarding interview')), value: 0.4 },
     received: [],
     spent: [],
+    committed: [],
     handoverDate: null,
     stageSince: '2026-08-06',
     ownerId: ADMIN,
@@ -330,6 +360,7 @@ const pipeline: Project[] = [
     likelihood: { state: 'missing', blocks: ['pipeline value', 'expected profit'] },
     received: [],
     spent: [],
+    committed: [],
     handoverDate: null,
     stageSince: '2026-07-30',
     ownerId: null,
@@ -352,6 +383,7 @@ const pipeline: Project[] = [
     likelihood: { ...confirmedBy(human('Anil Kumar', 'onboarding interview')), value: 0.3 },
     received: [],
     spent: [],
+    committed: [],
     handoverDate: null,
     stageSince: '2026-08-09',
     ownerId: ADMIN,
@@ -371,6 +403,7 @@ const pipeline: Project[] = [
     likelihood: { ...confirmedBy(human('Anil Kumar', 'onboarding interview')), value: 0.45 },
     received: [],
     spent: [],
+    committed: [],
     handoverDate: null,
     stageSince: '2026-08-07',
     ownerId: 'person-priya',
@@ -390,6 +423,7 @@ const pipeline: Project[] = [
     likelihood: { ...confirmedBy(human('Anil Kumar', 'onboarding interview')), value: 0.5 },
     received: [],
     spent: [],
+    committed: [],
     handoverDate: null,
     stageSince: '2026-08-04',
     ownerId: ADMIN,
@@ -409,6 +443,7 @@ const pipeline: Project[] = [
     likelihood: { ...confirmedBy(human('Anil Kumar', 'onboarding interview')), value: 0.6 },
     received: [],
     spent: [],
+    committed: [],
     handoverDate: null,
     stageSince: '2026-08-08',
     ownerId: ADMIN,
@@ -428,6 +463,7 @@ const pipeline: Project[] = [
     likelihood: { ...confirmedBy(human('Anil Kumar', 'onboarding interview')), value: 0.7 },
     received: [],
     spent: [],
+    committed: [],
     handoverDate: null,
     stageSince: '2026-08-03',
     ownerId: ADMIN,
@@ -447,6 +483,7 @@ const pipeline: Project[] = [
     likelihood: { ...confirmedBy(human('Anil Kumar', 'onboarding interview')), value: 0.85 },
     received: [],
     spent: [],
+    committed: [],
     handoverDate: null,
     stageSince: '2026-08-05',
     ownerId: ADMIN,
@@ -473,6 +510,7 @@ const archived: Project[] = [
     likelihood: null,
     received: [],
     spent: [],
+    committed: [],
     handoverDate: null,
     stageSince: '2026-05-02',
     ownerId: ADMIN,
@@ -492,6 +530,7 @@ const archived: Project[] = [
     likelihood: null,
     received: [],
     spent: [],
+    committed: [],
     handoverDate: null,
     stageSince: '2026-06-10',
     ownerId: ADMIN,
@@ -511,6 +550,7 @@ const archived: Project[] = [
     likelihood: null,
     received: [],
     spent: [],
+    committed: [],
     handoverDate: null,
     stageSince: '2026-07-01',
     ownerId: ADMIN,
@@ -530,6 +570,7 @@ const archived: Project[] = [
     likelihood: null,
     received: [],
     spent: [],
+    committed: [],
     handoverDate: {
       ...confirmedBy(human('Anil Kumar', 'onboarding interview')),
       value: '2026-02-10',
@@ -552,6 +593,7 @@ const archived: Project[] = [
     likelihood: null,
     received: [],
     spent: [],
+    committed: [],
     handoverDate: {
       ...confirmedBy(human('Anil Kumar', 'onboarding interview')),
       value: '2025-11-20',
@@ -574,6 +616,7 @@ const archived: Project[] = [
     likelihood: null,
     received: [],
     spent: [],
+    committed: [],
     handoverDate: {
       ...confirmedBy(human('Anil Kumar', 'gap question, 9 Aug')),
       value: '2026-05-30',
@@ -984,6 +1027,39 @@ const documents: Document[] = [
   },
 ];
 
+// ── Site feed ───────────────────────────────────────────────────────────
+// w08's site feed: Ravi at 08:10, "ceiling boards delayed", three photos.
+// The same note is the source behind the Boards deadline being inferred —
+// the feed is where it was said, the provenance is what it moved.
+
+const siteNotes: SiteNote[] = [
+  {
+    id: 'note-iyer-boards-delayed',
+    projectId: 'project-iyer',
+    authorId: 'person-ravi',
+    at: '2026-08-12T08:10:00.000Z',
+    text: 'ceiling boards delayed',
+    photoCount: 3,
+  },
+  {
+    id: 'note-iyer-wardrobe',
+    projectId: 'project-iyer',
+    authorId: 'person-ravi',
+    // Two days ago — "logged on site 2 days ago, unpriced" on w08.
+    at: '2026-08-10T16:40:00.000Z',
+    text: 'client asked for an extra wardrobe in the guest bedroom',
+    photoCount: 2,
+  },
+  {
+    id: 'note-kormangala-ceiling',
+    projectId: 'project-kormangala',
+    authorId: 'person-ravi',
+    at: '2026-08-09T09:25:00.000Z',
+    text: 'false ceiling started, waiting on the electrician',
+    photoCount: 1,
+  },
+];
+
 // ── Coverage ────────────────────────────────────────────────────────────
 // w10_firm_memory, by area. Headline is 58%, up from 34% at onboarding.
 
@@ -1026,6 +1102,7 @@ export function buildFirm(): Firm {
   return {
     entities: allEntities(),
     documents,
+    siteNotes,
     coverageByArea,
     interviewAnswered: 0,
     demoSettled: false,

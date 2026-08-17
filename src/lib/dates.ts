@@ -93,6 +93,12 @@ export const formatShortDate = (iso: string): string => {
   return `${d.getUTCDate()} ${MONTH_NAMES[d.getUTCMonth()]?.slice(0, 3)}`;
 };
 
+/** "08:10" — the site feed's timestamp (§6.3). Read in UTC, like every other date here. */
+export const formatTime = (iso: string): string => {
+  const d = new Date(iso);
+  return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+};
+
 /** "due today", "in 2 days", "4 days ago" — always relative to the fixed today. */
 export const formatRelative = (iso: string): string => {
   const days = daysFromToday(iso);
