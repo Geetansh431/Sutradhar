@@ -3,7 +3,9 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import { Shell } from '@/chrome/Shell';
 import { buildState, readScenarioFromUrl } from '@/fixtures/scenarios';
 import { Lab } from '@/lab/Lab';
+import { Calendar } from '@/screens/Calendar';
 import { Canvas } from '@/screens/Canvas';
+import { Files } from '@/screens/Files';
 import { FirmMemory } from '@/screens/FirmMemory';
 import { Home } from '@/screens/Home';
 import { Money } from '@/screens/Money';
@@ -11,6 +13,7 @@ import { Onboarding } from '@/screens/Onboarding';
 import { People } from '@/screens/People';
 import { Projects } from '@/screens/Projects';
 import { ProjectWorkspaceRoute } from '@/screens/ProjectWorkspace';
+import { Settings } from '@/screens/Settings';
 import { useStore } from '@/store/store';
 
 /**
@@ -42,32 +45,47 @@ function useScenario() {
   }, [reset]);
 }
 
+/**
+ * The route table, without a router around it.
+ *
+ * Separated so `App.test.tsx` can mount it inside a `MemoryRouter` at any path
+ * and assert that every rail destination reaches its own screen — the "no dead
+ * ends" bar. A test that duplicated this list could not catch a deleted route.
+ */
+export function AppRoutes() {
+  return (
+    <Routes>
+      {/* Screens render inside the shell — rail, topbar, ask bar. */}
+      <Route element={<Shell />}>
+        <Route path="/" element={<OnboardingGate />} />
+        <Route path="/projects" element={<Projects />} />
+        <Route path="/projects/:projectId" element={<ProjectWorkspaceRoute />} />
+        <Route path="/money" element={<Money />} />
+        <Route path="/people" element={<People />} />
+        <Route path="/files" element={<Files />} />
+        <Route path="/calendar" element={<Calendar />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/memory" element={<FirmMemory />} />
+        <Route path="/canvas" element={<Canvas />} />
+        <Route path="/canvas/:questionId" element={<Canvas />} />
+      </Route>
+
+      {/* /lab is a review surface, deliberately outside the chrome. */}
+      <Route path="/lab" element={<Lab />} />
+      <Route path="/lab/:section" element={<Lab />} />
+      {/* Every destination in §4.1 now exists; this catches typos only. */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
 export function App() {
   useScenario();
 
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Screens render inside the shell — rail, topbar, ask bar. */}
-        <Route element={<Shell />}>
-          <Route path="/" element={<OnboardingGate />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/projects/:projectId" element={<ProjectWorkspaceRoute />} />
-          <Route path="/money" element={<Money />} />
-          <Route path="/people" element={<People />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/memory" element={<FirmMemory />} />
-          <Route path="/canvas" element={<Canvas />} />
-          <Route path="/canvas/:questionId" element={<Canvas />} />
-        </Route>
-
-        {/* /lab is a review surface, deliberately outside the chrome. */}
-        <Route path="/lab" element={<Lab />} />
-        <Route path="/lab/:section" element={<Lab />} />
-        {/* Home, Money, Canvas, Onboarding and /lab exist so far. The rest of
-            the eight land here as they are built (§4.1). */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <AppRoutes />
     </BrowserRouter>
   );
 }

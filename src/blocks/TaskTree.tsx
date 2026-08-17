@@ -19,6 +19,7 @@ import { flattenTree, type TaskNode } from '@/domain/selectors/tasks';
 import type { EntityId, TaskStatus } from '@/domain/types';
 import { cn } from '@/lib/cn';
 import { formatShortDate } from '@/lib/dates';
+import { hasValue } from '@/lib/field';
 import { type ChangeSet, proposeChangeSet } from '@/store/change';
 
 export type TaskTreeProps = {
@@ -27,6 +28,11 @@ export type TaskTreeProps = {
   subject: string;
   /** Where an added task lands. Without it the block is read-only about adding. */
   projectId?: EntityId;
+  /**
+   * Task ids the answer is about — the Canvas passes the chain it is explaining
+   * so the reader can see which rows the sentence refers to (§7.3).
+   */
+  highlightIds?: readonly EntityId[];
   onPropose?: (changeSet: ChangeSet) => void;
   loading?: boolean;
   restricted?: boolean;
@@ -157,6 +163,7 @@ function Row({
   node,
   subject,
   first,
+  highlighted,
   editing,
   dragging,
   over,
@@ -173,6 +180,8 @@ function Row({
   subject: string;
   /** The tree's single tab stop lands on the first row. */
   first: boolean;
+  /** This row is part of what the answer is explaining. */
+  highlighted: boolean;
   editing: boolean;
   dragging: boolean;
   over: boolean;
@@ -205,6 +214,7 @@ function Row({
       style={{ paddingLeft: `${node.depth * 1.5}rem` }}
       className={cn(
         'group flex items-baseline gap-2 rounded py-1 pr-2',
+        highlighted && 'bg-brand-soft/40',
         onPropose && 'cursor-grab',
         dragging && 'opacity-40',
         over && 'bg-fill-2 ring-1 ring-brand',
@@ -233,6 +243,16 @@ function Row({
 
       {node.deadline ? (
         <FieldCell field={node.deadline} format={formatShortDate} className="shrink-0 text-xs" />
+      ) : null}
+
+      {/* Slippage is against the plan, not the clock — so it is stated, not
+          inferred from the date sitting next to it. */}
+      {node.slippedDays && hasValue(node.slippedDays) && node.slippedDays.value > 0 ? (
+        <FieldCell
+          field={node.slippedDays}
+          format={(days) => `${days}d behind`}
+          className="shrink-0 text-xs"
+        />
       ) : null}
 
       {node.linkedPaymentId ? (
@@ -282,6 +302,7 @@ export function TaskTree({
   nodes,
   subject,
   projectId,
+  highlightIds,
   onPropose,
   loading = false,
   restricted = false,
@@ -343,6 +364,7 @@ export function TaskTree({
             node={node}
             subject={subject}
             first={index === 0}
+            highlighted={highlightIds?.includes(node.id) ?? false}
             editing={editingId === node.id}
             dragging={draggingId === node.id}
             over={overId === node.id}
@@ -382,6 +404,8 @@ export function TaskTree({
                     assigneeId: null,
                     deadline: { state: 'missing', blocks: ['handover countdown'] },
                     status: 'unassigned',
+                    // A brand-new task has not slipped against anything yet.
+                    slippedDays: null,
                     linkedPaymentId: null,
                     archivedAt: null,
                   },

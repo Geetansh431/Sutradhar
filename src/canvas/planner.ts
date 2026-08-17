@@ -163,6 +163,62 @@ const PLANS: Record<string, unknown> = {
       'Ask me the missing terms',
     ],
   },
+
+  /**
+   * "Will Kormangala hit its handover date?" — the §5.4 projects shape.
+   *
+   * The honest answer is that there is no handover date on file to hit, and the
+   * chain below it is four deep with two of its four tasks undated. The
+   * narrative states the consequence (§9.3) rather than reporting the status:
+   * the ceiling is not merely late, it is holding three other tasks behind it.
+   */
+  'kormangala-handover': {
+    questionId: 'kormangala-handover',
+    answer: {
+      headline: 'No handover date on file, and the chain is {metric} behind',
+      metric: {
+        metric: 'days-behind-schedule',
+        scope: { kind: 'project', id: 'project-kormangala' },
+        period: null,
+      },
+    },
+    narrative: [
+      'Kormangala has no handover date recorded, so nothing is counting down to it. The false ceiling is the blocker: electrical second fix cannot start until it closes, and painting and snagging sit behind that with no dates at all.',
+      'Recovering the date means closing the ceiling first — every day it slips moves the three tasks under it by the same day.',
+    ],
+    caveats: [],
+    working: [
+      {
+        block: 'task-tree',
+        projectId: 'project-kormangala',
+        highlight: [
+          'task-kormangala-false-ceiling',
+          'task-kormangala-electrical',
+          'task-kormangala-painting',
+          'task-kormangala-snagging',
+        ],
+      },
+    ],
+    evidence: ['doc-whatsapp-kormangala', 'human-anil-kumar'],
+    actions: [
+      {
+        label: 'Set handover date',
+        intent: 'reschedule',
+        target: { kind: 'project', id: 'project-kormangala' },
+      },
+      {
+        label: 'Chase the ceiling',
+        intent: 'notify',
+        target: { kind: 'task', id: 'task-kormangala-false-ceiling' },
+      },
+      { label: 'Pin this view', intent: 'pin', target: null },
+    ],
+    followUps: [
+      'What would recover the two weeks?',
+      'Who is free to take painting?',
+      'Same view for Iyer Residence',
+    ],
+  },
 };
 
 /**

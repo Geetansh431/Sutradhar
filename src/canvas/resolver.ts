@@ -15,6 +15,7 @@
 
 import type { BlockRef, CanvasPlan, MetricRef } from '@/canvas/plan';
 import { moneyWindow } from '@/domain/selectors/money';
+import { scheduleView } from '@/domain/selectors/tasks';
 import { vendorExposure } from '@/domain/selectors/vendors';
 import type { Document, EntityId } from '@/domain/types';
 import type { SourceRef } from '@/lib/field';
@@ -23,15 +24,26 @@ import type { EntityTable } from '@/store/store';
 
 export type ResolverState = { entities: EntityTable; documents: Document[] };
 
-/** What a metric resolved to, and whether it can be shown at all. */
+/**
+ * What a metric resolved to, and whether it can be shown at all.
+ *
+ * Not every metric is money: `days-behind-schedule` counts days. A day count
+ * stored in a `Paise` field would be a lie the type system would sign off on,
+ * so the value is a discriminated union and only `money` carries `Paise`.
+ * `display` is the only part that reaches the screen either way.
+ */
+export type MetricValue = { unit: 'money'; amount: Paise } | { unit: 'days'; count: number };
+
 export type ResolvedMetric = {
-  value: Paise;
+  value: MetricValue;
   display: string;
   /** Named in a caveat when true (§7.2). */
   hasUnconfirmed: boolean;
   /** The figures the caveat should name. */
   unconfirmedLabels: string[];
 };
+
+const money = (amount: Paise): MetricValue => ({ unit: 'money', amount });
 
 export type EvidenceCard = {
   id: string;
@@ -63,7 +75,7 @@ function resolveMetric(state: ResolverState, ref: MetricRef): ResolvedMetric {
       const value = scoped.reduce((acc, vendor) => addPaise(acc, vendor.open), ZERO);
       const unconfirmed = scoped.filter((vendor) => vendor.openUnconfirmed);
       return {
-        value,
+        value: money(value),
         display: formatINR(value),
         hasUnconfirmed: unconfirmed.length > 0,
         unconfirmedLabels: unconfirmed.map((vendor) => vendor.name),
@@ -73,17 +85,46 @@ function resolveMetric(state: ResolverState, ref: MetricRef): ResolvedMetric {
     case 'coverage-gap': {
       const gaps = moneyWindow(state).gaps;
       const value = gaps.reduce((acc, gap) => addPaise(acc, gap.shortfall), ZERO);
-      return { value, display: formatINR(value), hasUnconfirmed: false, unconfirmedLabels: [] };
+      return {
+        value: money(value),
+        display: formatINR(value),
+        hasUnconfirmed: false,
+        unconfirmedLabels: [],
+      };
+    }
+
+    case 'days-behind-schedule': {
+      // Scope names the project; without one there is no schedule to read.
+      const view = ref.scope ? scheduleView(state, ref.scope.id) : null;
+      const days = view?.daysBehind ?? null;
+
+      // The headline states the slip, so it is the slip's provenance that has to
+      // be caveated — not the deadlines sitting next to it (§7.2). A slip
+      // inherited from a parent task is inferred, and the answer says which.
+      const inferred = (view?.chain ?? []).filter((task) => task.slippedDays?.state === 'inferred');
+
+      return {
+        value: { unit: 'days', count: days ?? 0 },
+        // "not" rather than "0 days": nothing recorded as slipping is a
+        // different statement from a measured zero, and reads as one.
+        display: days === null ? 'not' : `${days} ${days === 1 ? 'day' : 'days'}`,
+        hasUnconfirmed: inferred.length > 0,
+        unconfirmedLabels: inferred.map((task) => task.title),
+      };
     }
 
     case 'collectible-this-week':
     case 'payable-next-14-days':
     case 'project-margin':
-    case 'days-behind-schedule':
     case 'period-in-out': {
       // Planned for, not yet resolved. Returning zero would be a fabricated
       // number, so the Canvas treats an unresolved metric as a gap instead.
-      return { value: ZERO, display: '—', hasUnconfirmed: false, unconfirmedLabels: [] };
+      return {
+        value: money(ZERO),
+        display: '—',
+        hasUnconfirmed: false,
+        unconfirmedLabels: [],
+      };
     }
   }
 }
@@ -130,10 +171,15 @@ export function resolve(state: ResolverState, plan: CanvasPlan): ResolvedAnswer 
   if (metric?.hasUnconfirmed) {
     const names = metric.unconfirmedLabels.join(' and ');
     const count = metric.unconfirmedLabels.length;
-    // Mandatory, and it names which figure (§7.2).
+    // Mandatory, and it names which figure (§7.2). A day count has no total to
+    // be excluded from, so the two units say different second halves.
+    const consequence =
+      metric.value.unit === 'money'
+        ? 'Shown with a dotted underline, and excluded from the total.'
+        : `${count === 1 ? 'That slip is' : 'Those slips are'} inherited from the task above, not measured on site.`;
     caveats.push(
       `${count === 1 ? 'One figure here is' : `${count} figures here are`} unconfirmed — ${names}. ` +
-        'Shown with a dotted underline, and excluded from the total.',
+        consequence,
     );
   }
 

@@ -176,6 +176,22 @@ describe('when the Canvas cannot answer — §7.7', () => {
     expect(text(html)).not.toMatch(/₹/);
   });
 
+  it('the handover question composes block 08 and states the slip', () => {
+    const html = text(render('kormangala-handover'));
+    // The answer is that no handover date exists to hit — and the chain behind it.
+    expect(html).toContain('No handover date on file');
+    expect(html).toContain('4 days');
+    expect(html).toContain('False ceiling');
+    expect(html).toContain('Snagging and handover');
+  });
+
+  it('caveats the inherited slip rather than stating it as measured', () => {
+    const html = text(render('kormangala-handover'));
+    expect(html).toContain('unconfirmed');
+    expect(html).toContain('Electrical — second fix');
+    expect(html).toContain('inherited from the task above');
+  });
+
   it('an unknown question offers what can be asked instead', () => {
     const html = render('what-is-the-weather');
     expect(text(html)).toContain('Nothing canned matches that');

@@ -25,6 +25,8 @@ export type TaskNode = {
   /** The resolved assignee name, or null when nothing is assigned (§6.3). */
   assignee: string | null;
   deadline: Task['deadline'];
+  /** Days behind the plan, as recorded on site. Never derived from the clock. */
+  slippedDays: Task['slippedDays'];
   status: TaskStatus;
   linkedPaymentId: EntityId | null;
   /** Depth from the root, so the block indents without walking back up. */
@@ -77,6 +79,7 @@ export function taskTree(state: TasksState, projectId: EntityId): TaskNode[] {
     title: task.title,
     assignee: columnFor(task.status, assigneeName(state, task.assigneeId)),
     deadline: task.deadline,
+    slippedDays: task.slippedDays,
     status: task.status,
     linkedPaymentId: task.linkedPaymentId,
     depth,
@@ -108,6 +111,65 @@ export type TaskSummary = {
   /** Tasks with no deadline at all — what blocks the handover countdown. */
   undated: number;
 };
+
+/**
+ * Whether a project will hit its handover date — spec §7, the
+ * `kormangala-handover` question.
+ *
+ * "Days behind, the blocking chain, and what would recover it."
+ *
+ * The chain is the longest run of dependent slipping-or-undated tasks from a
+ * root downwards. It matters because a delay at the top is a delay at every
+ * node under it: four days lost on the ceiling is four days lost on snagging.
+ *
+ * `handoverDate` may be missing, and on Kormangala it is. That is not a hole in
+ * the answer — it *is* the answer: a date nobody holds cannot be hit or missed,
+ * and saying so is more useful than computing against a guess.
+ */
+export type ScheduleView = {
+  /** How far the worst-slipping task has drifted, in days. Null when nothing slips. */
+  daysBehind: number | null;
+  /** Root-to-leaf run of tasks each waiting on the one above. */
+  chain: TaskNode[];
+  /** Tasks with no date at all — what stops a countdown existing. */
+  undated: TaskNode[];
+  /** The task at the head of the chain: unblock this and the rest can move. */
+  blocker: TaskNode | null;
+};
+
+const SLIPPING: ReadonlySet<TaskStatus> = new Set<TaskStatus>(['slipping', 'unassigned']);
+
+/** The longest run of dependent held-up tasks from this node down. */
+const longestChain = (node: TaskNode): TaskNode[] => {
+  if (!SLIPPING.has(node.status)) return [];
+  const best = node.children
+    .map(longestChain)
+    .reduce((longest, candidate) => (candidate.length > longest.length ? candidate : longest), []);
+  return [node, ...best];
+};
+
+export function scheduleView(state: TasksState, projectId: EntityId): ScheduleView {
+  const roots = taskTree(state, projectId);
+  const all = flattenTree(roots);
+
+  const chain = roots
+    .map(longestChain)
+    .reduce((longest, candidate) => (candidate.length > longest.length ? candidate : longest), []);
+
+  // Read from what the site recorded, never computed against today: a task due
+  // next week can already be four days behind where the plan put it, and
+  // comparing its date to the clock would report that as "nothing overdue".
+  const slips = all
+    .map((task) => (task.slippedDays && hasValue(task.slippedDays) ? task.slippedDays.value : 0))
+    .filter((days) => days > 0);
+
+  return {
+    daysBehind: slips.length === 0 ? null : Math.max(...slips),
+    chain,
+    undated: all.filter((task) => task.deadline === null || !hasValue(task.deadline)),
+    blocker: chain[0] ?? null,
+  };
+}
 
 export function taskSummary(state: TasksState, projectId: EntityId): TaskSummary {
   const all = tasksOf(state, projectId);

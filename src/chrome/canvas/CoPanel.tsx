@@ -16,9 +16,11 @@ import { Chart } from '@/blocks/Chart';
 import { DataGrid, FieldCell, type GridColumn } from '@/blocks/DataGrid';
 import { MoneyTimeline } from '@/blocks/MoneyTimeline';
 import { paymentColumns, uncoveredIds } from '@/blocks/paymentColumns';
+import { TaskTree } from '@/blocks/TaskTree';
 import type { BlockRef } from '@/canvas/plan';
 import type { EvidenceCard, ResolvedAnswer } from '@/canvas/resolver';
 import { moneyWindow } from '@/domain/selectors/money';
+import { taskTree } from '@/domain/selectors/tasks';
 import type { VendorExposure } from '@/domain/selectors/vendors';
 import { exposureShares, vendorExposure } from '@/domain/selectors/vendors';
 import { cn } from '@/lib/cn';
@@ -71,6 +73,7 @@ const blockKey = (block: BlockRef): string => {
   if (block.block === 'chart') return `chart-${block.type}-${block.by}`;
   if (block.block === 'money-timeline') return `money-timeline-${block.window}`;
   if (block.block === 'gap') return `gap-${block.area}`;
+  if (block.block === 'task-tree') return `task-tree-${block.projectId}`;
   return block.block;
 };
 
@@ -116,6 +119,20 @@ function PlannedBlock({ block, entities }: { block: BlockRef; entities: EntityTa
 
     case 'money-timeline':
       return <MoneyTimeline days={block.window} stateOverride={{ entities }} />;
+
+    case 'task-tree': {
+      const project = entities[block.projectId];
+      const name = project && 'name' in project ? project.name : block.projectId;
+      // Read-only in the co-panel: the Canvas answers questions, and editing
+      // the tree belongs on the project's own screen.
+      return (
+        <TaskTree
+          nodes={taskTree({ entities }, block.projectId)}
+          subject={name}
+          highlightIds={block.highlight}
+        />
+      );
+    }
 
     case 'gap':
       // Block 10 is not built yet. Saying so is better than rendering nothing.

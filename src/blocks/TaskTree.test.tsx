@@ -10,7 +10,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { TaskTree } from '@/blocks/TaskTree';
-import { flattenTree, taskSummary, taskTree } from '@/domain/selectors/tasks';
+import { flattenTree, scheduleView, taskSummary, taskTree } from '@/domain/selectors/tasks';
 import { buildState } from '@/fixtures/scenarios';
 
 const LIVE = { entities: buildState('live').entities };
@@ -79,6 +79,40 @@ describe('taskTree — w08', () => {
   it('scopes to one project', () => {
     const kormangala = taskTree(LIVE, 'project-kormangala');
     expect(kormangala.every((node) => node.title !== 'Modular kitchen')).toBe(true);
+  });
+});
+
+describe('scheduleView — the kormangala-handover answer', () => {
+  const view = scheduleView(LIVE, 'project-kormangala');
+
+  it('reads the slip that was recorded, not one derived from today', () => {
+    // Both Kormangala dates are in the *future* on the fixed clock. Measuring
+    // overdue-ness against today would report "nothing behind", which is the
+    // opposite of true — the slip is against the plan.
+    expect(view.daysBehind).toBe(4);
+  });
+
+  it('walks the blocking chain from the ceiling down to snagging', () => {
+    expect(view.chain.map((task) => task.title)).toEqual([
+      'False ceiling',
+      'Electrical — second fix',
+      'Painting',
+      'Snagging and handover',
+    ]);
+  });
+
+  it('names the head of the chain — unblock this and the rest can move', () => {
+    expect(view.blocker?.title).toBe('False ceiling');
+  });
+
+  it('lists what has no date at all, which is why nothing counts down', () => {
+    expect(view.undated.map((task) => task.title)).toEqual(['Painting', 'Snagging and handover']);
+  });
+
+  it('reports nothing behind on a project that is not slipping', () => {
+    const hsr = scheduleView(LIVE, 'project-hsr-villa');
+    expect(hsr.daysBehind).toBeNull();
+    expect(hsr.chain).toEqual([]);
   });
 });
 

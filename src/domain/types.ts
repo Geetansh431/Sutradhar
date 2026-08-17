@@ -148,6 +148,16 @@ export type Task = {
   assigneeId: EntityId | null;
   deadline: FieldValue<string> | null;
   status: TaskStatus;
+  /**
+   * Days this task has slipped against the plan it was scheduled to — spec
+   * §6.3, and the `kormangala-handover` answer.
+   *
+   * Recorded, not derived: a task due next Wednesday can already be four days
+   * behind where it should be, and comparing its date to today would call that
+   * "nothing overdue". Slippage is against the plan, and only the site knows
+   * it, which is why it carries provenance like any other observed fact.
+   */
+  slippedDays: FieldValue<number> | null;
   linkedPaymentId: EntityId | null;
   archivedAt: string | null;
 };
@@ -161,6 +171,19 @@ export type Document = {
   currentForExecution: boolean;
   approvedAt: string | null;
   unreadable: boolean;
+  /**
+   * Which folder this sits in — spec §6.6's "folder tree per project, plus a
+   * firm-level tree. The firm defines the hierarchy; we do not impose one."
+   * A path, so the tree is derived rather than stored as nesting.
+   */
+  folder: string;
+  /**
+   * Version label, and what this replaced. Together they end §6.6's named
+   * failure: "the carpenter built from the old PDF". A superseded drawing is
+   * still on file — it is not deleted, it is marked as not current.
+   */
+  version: string | null;
+  supersedesId: EntityId | null;
   archivedAt: string | null;
 };
 
