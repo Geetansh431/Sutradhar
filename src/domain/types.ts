@@ -48,6 +48,18 @@ export type Project = {
   received: FieldValue<Paise>[];
   spent: FieldValue<Paise>[];
   handoverDate: FieldValue<string> | null;
+  /**
+   * When the project entered its current stage. Ageing is measured from here,
+   * and w07 shows it in accent once it exceeds the firm's own pattern (§6.2) —
+   * so a stage change has to move this, not just the stage.
+   */
+  stageSince: string | null;
+  /** Who is chasing it. `null` is the gap w07 calls out on the café fitout. */
+  ownerId: EntityId | null;
+  /** The next planned contact. `null` reads as "no follow-up set". */
+  nextFollowUp: string | null;
+  /** One line of state, as the card's third line (§6.2). */
+  note: string | null;
   archivedAt: string | null;
 };
 

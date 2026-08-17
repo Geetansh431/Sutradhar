@@ -8,6 +8,7 @@ import { FirmMemory } from '@/screens/FirmMemory';
 import { Home } from '@/screens/Home';
 import { Money } from '@/screens/Money';
 import { Onboarding } from '@/screens/Onboarding';
+import { Projects } from '@/screens/Projects';
 import { useStore } from '@/store/store';
 
 /**
@@ -48,6 +49,7 @@ export function App() {
         {/* Screens render inside the shell — rail, topbar, ask bar. */}
         <Route element={<Shell />}>
           <Route path="/" element={<OnboardingGate />} />
+          <Route path="/projects" element={<Projects />} />
           <Route path="/money" element={<Money />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/memory" element={<FirmMemory />} />
