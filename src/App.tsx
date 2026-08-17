@@ -8,6 +8,7 @@ import { FirmMemory } from '@/screens/FirmMemory';
 import { Home } from '@/screens/Home';
 import { Money } from '@/screens/Money';
 import { Onboarding } from '@/screens/Onboarding';
+import { People } from '@/screens/People';
 import { Projects } from '@/screens/Projects';
 import { useStore } from '@/store/store';
 
@@ -51,6 +52,7 @@ export function App() {
           <Route path="/" element={<OnboardingGate />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/money" element={<Money />} />
+          <Route path="/people" element={<People />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/memory" element={<FirmMemory />} />
           <Route path="/canvas" element={<Canvas />} />

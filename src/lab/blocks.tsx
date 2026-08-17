@@ -10,9 +10,12 @@
 import { ChangePreview, ChangePreviewLoading } from '@/blocks/ChangePreview';
 import { Chart, ChartLoading, moneyDatum } from '@/blocks/Chart';
 import { DataGrid, DataGridLoading } from '@/blocks/DataGrid';
+import { Ledger, LedgerLoading } from '@/blocks/Ledger';
 import { MoneyTimeline, MoneyTimelineLoading } from '@/blocks/MoneyTimeline';
 import { paymentColumns, uncoveredIds } from '@/blocks/paymentColumns';
+import { fieldRow, plainRow, RecordCard, RecordCardLoading } from '@/blocks/RecordCard';
 import { type MoneyState, moneyWindow } from '@/domain/selectors/money';
+import { ledgerFor } from '@/domain/selectors/people';
 import { exposureShares, vendorExposure } from '@/domain/selectors/vendors';
 import type { Payment } from '@/domain/types';
 import { buildState } from '@/fixtures/scenarios';
@@ -651,9 +654,259 @@ export const CHART_CASES: LabCase[] = [
   },
 ];
 
+// ── Block 01 · record card ──────────────────────────────────────────────
+// Shown over a vendor, which is the configuration §6.5 specifies and the one
+// that carries a real gap: Godrej has no payment terms.
+
+const vendorOf = (id: string) => {
+  const entity = LIVE.entities[id];
+  return entity?.kind === 'vendor' ? entity : undefined;
+};
+
+const text = (value: string) => value;
+
+export const RECORD_CARD_CASES: LabCase[] = [
+  {
+    block: '01-record-card',
+    state: 'loading',
+    note: 'skeleton rows — no data read',
+    render: () => (
+      <div className="rounded-md border border-line bg-paper p-4">
+        <RecordCardLoading />
+      </div>
+    ),
+  },
+  {
+    block: '01-record-card',
+    state: 'empty',
+    note: 'nothing recorded — offers the way to fill it',
+    render: () => <RecordCard title="Godrej dealer" fields={[]} entityId="vendor-godrej-dealer" />,
+  },
+  {
+    block: '01-record-card',
+    state: 'populated',
+    note: 'a vendor with terms on file',
+    render: () => {
+      const vendor = vendorOf('vendor-sharma');
+      if (!vendor) return null;
+      return (
+        <RecordCard
+          title={vendor.name}
+          subtitle={vendor.category}
+          entityId={vendor.id}
+          fields={[
+            plainRow('category', 'Category', vendor.category),
+            ...(vendor.contact ? [fieldRow('contact', 'Contact', vendor.contact, text)] : []),
+            ...(vendor.paymentTerms
+              ? [fieldRow('terms', 'Payment terms', vendor.paymentTerms, text)]
+              : []),
+          ]}
+          onPropose={() => {}}
+        />
+      );
+    },
+  },
+  {
+    block: '01-record-card',
+    state: 'unconfirmed',
+    note: 'extracted contact — dotted, hover for the source',
+    render: () => {
+      const vendor = vendorOf('vendor-kumar-carpentry');
+      if (!vendor?.contact) return null;
+      return (
+        <RecordCard
+          title={vendor.name}
+          subtitle={vendor.category}
+          entityId={vendor.id}
+          fields={[fieldRow('contact', 'Contact', vendor.contact, text)]}
+        />
+      );
+    },
+  },
+  {
+    block: '01-record-card',
+    state: 'conflicting',
+    note: 'two sources disagree — both shown, none chosen',
+    render: () => (
+      <RecordCard
+        title="Sharma Electricals"
+        subtitle="electrical"
+        entityId="vendor-sharma"
+        fields={[
+          fieldRow(
+            'terms',
+            'Payment terms',
+            {
+              state: 'conflicting',
+              candidates: [
+                { value: '30 days', source: { kind: 'document', id: 'd', label: 'Contract' } },
+                { value: '45 days', source: { kind: 'message', id: 'm', label: 'WhatsApp' } },
+              ],
+            },
+            text,
+          ),
+        ]}
+      />
+    ),
+  },
+  {
+    block: '01-record-card',
+    state: 'missing',
+    note: 'a gap, not a blank — §6.5',
+    render: () => {
+      const vendor = vendorOf('vendor-godrej-dealer');
+      if (!vendor?.paymentTerms) return null;
+      return (
+        <RecordCard
+          title={vendor.name}
+          subtitle={vendor.category}
+          entityId={vendor.id}
+          fields={[fieldRow('terms', 'Payment terms', vendor.paymentTerms, text)]}
+          onPropose={() => {}}
+        />
+      );
+    },
+  },
+  {
+    block: '01-record-card',
+    state: 'restricted',
+    note: 'Team role — a salary record is never fetched',
+    render: () => (
+      <RecordCard
+        title="Ravi"
+        fields={[]}
+        entityId="person-ravi"
+        restricted
+        restrictedMessage="Salary is admin-only."
+      />
+    ),
+  },
+];
+
+// ── Block 04 · ledger ───────────────────────────────────────────────────
+
+const sharmaLedger = () => ledgerFor(LIVE, 'vendor-sharma');
+
+export const LEDGER_CASES: LabCase[] = [
+  {
+    block: '04-ledger',
+    state: 'loading',
+    note: 'skeleton rows',
+    render: () => <LedgerLoading />,
+  },
+  {
+    block: '04-ledger',
+    state: 'empty',
+    note: 'no entries yet — says what will appear',
+    render: () => (
+      <Ledger
+        lines={[]}
+        outstanding={{ value: rupees(0), countedCount: 0, excludedCount: 0, caveat: null }}
+        subject="Godrej dealer"
+      />
+    ),
+  },
+  {
+    block: '04-ledger',
+    state: 'populated',
+    note: "Sharma's running balance, with mark-paid",
+    render: () => {
+      const ledger = sharmaLedger();
+      return (
+        <Ledger
+          lines={ledger.lines}
+          outstanding={ledger.outstanding}
+          subject="Sharma Electricals"
+          onPropose={() => {}}
+        />
+      );
+    },
+  },
+  {
+    block: '04-ledger',
+    state: 'unconfirmed',
+    note: 'extracted amount — dotted, and excluded from the total',
+    render: () => {
+      const ledger = ledgerFor(LIVE, 'vendor-kumar-carpentry');
+      return (
+        <Ledger
+          lines={ledger.lines}
+          outstanding={ledger.outstanding}
+          subject="Kumar Carpentry"
+          onPropose={() => {}}
+        />
+      );
+    },
+  },
+  {
+    block: '04-ledger',
+    state: 'conflicting',
+    note: 'both values shown, amber',
+    render: () => {
+      const ledger = sharmaLedger();
+      const [first, ...rest] = ledger.lines;
+      if (!first) return null;
+      return (
+        <Ledger
+          lines={[
+            {
+              ...first,
+              amount: {
+                state: 'conflicting',
+                candidates: [
+                  { value: rupees(80000), source: { kind: 'document', id: 'd', label: 'Bill' } },
+                  { value: rupees(85000), source: { kind: 'message', id: 'm', label: 'WhatsApp' } },
+                ],
+              },
+            },
+            ...rest,
+          ]}
+          outstanding={ledger.outstanding}
+          subject="Sharma Electricals"
+        />
+      );
+    },
+  },
+  {
+    block: '04-ledger',
+    state: 'missing',
+    note: 'an amount we do not hold — an affordance, never a zero',
+    render: () => {
+      const ledger = sharmaLedger();
+      const [first, ...rest] = ledger.lines;
+      if (!first) return null;
+      return (
+        <Ledger
+          lines={[{ ...first, amount: { state: 'missing', blocks: ['vendor ledger'] } }, ...rest]}
+          outstanding={ledger.outstanding}
+          subject="Sharma Electricals"
+        />
+      );
+    },
+  },
+  {
+    block: '04-ledger',
+    state: 'restricted',
+    note: 'Team role — a ledger is money, so it is never fetched',
+    render: () => {
+      const ledger = sharmaLedger();
+      return (
+        <Ledger
+          lines={ledger.lines}
+          outstanding={ledger.outstanding}
+          subject="Sharma Electricals"
+          restricted
+        />
+      );
+    },
+  },
+];
+
 export const ALL_CASES: LabCase[] = [
   ...MONEY_TIMELINE_CASES,
   ...DATA_GRID_CASES,
   ...CHANGE_PREVIEW_CASES,
   ...CHART_CASES,
+  ...RECORD_CARD_CASES,
+  ...LEDGER_CASES,
 ];
