@@ -66,36 +66,30 @@ const listOf = <K extends 'task' | 'payment' | 'project'>(
  * A date we do not hold keeps its item off the axis rather than placing it at a
  * guessed position — the calendar would otherwise assert something nobody said.
  */
-export function calendarItems(state: CalendarState): CalendarItem[] {
-  const seesMoney = canSeeMoney({
-    entities: state.entities,
-    currentUserId: state.currentUserId,
-  } satisfies RoleState);
-
-  const items: CalendarItem[] = [];
-
-  for (const task of listOf(state, 'task')) {
-    if (!task.deadline || !hasValue(task.deadline)) continue;
-    items.push({
+/** Task deadlines. An undated task is simply not on the axis. */
+const taskItems = (state: CalendarState): CalendarItem[] =>
+  listOf(state, 'task')
+    .filter((task) => task.deadline !== null && hasValue(task.deadline))
+    .map((task) => ({
       id: `cal-${task.id}`,
-      date: task.deadline.value,
-      kind: 'task',
+      date: task.deadline && hasValue(task.deadline) ? task.deadline.value : '',
+      kind: 'task' as const,
       title: task.title,
       projectName: nameOf(state, task.projectId),
       detail: null,
-      uncertain: task.deadline.state !== 'confirmed',
-    });
-  }
+      uncertain: task.deadline?.state !== 'confirmed',
+    }));
 
-  // §3.2: a team member's calendar holds no money, so these are never built.
-  if (seesMoney) {
-    for (const payment of listOf(state, 'payment')) {
-      if (!hasValue(payment.due)) continue;
+/** Payment due dates. Never built for a team member (§3.2). */
+const paymentItems = (state: CalendarState): CalendarItem[] =>
+  listOf(state, 'payment')
+    .filter((payment) => hasValue(payment.due))
+    .map((payment) => {
       const counterparty = nameOf(state, payment.counterpartyId);
-      items.push({
+      return {
         id: `cal-${payment.id}`,
-        date: payment.due.value,
-        kind: 'payment',
+        date: hasValue(payment.due) ? payment.due.value : '',
+        kind: 'payment' as const,
         // A firm-level payment has no counterparty — salaries are owed to the
         // team, not to a vendor — so it carries its own label instead.
         title: counterparty
@@ -104,13 +98,16 @@ export function calendarItems(state: CalendarState): CalendarItem[] {
         projectName: nameOf(state, payment.projectId),
         detail: hasValue(payment.amount) ? formatINR(payment.amount.value) : null,
         uncertain: payment.due.state !== 'confirmed' || !hasValue(payment.amount),
-      });
-    }
-  }
+      };
+    });
 
-  for (const project of listOf(state, 'project')) {
+/** Handover dates and booked follow-ups — the project's own two dated things. */
+const projectItems = (state: CalendarState): CalendarItem[] =>
+  listOf(state, 'project').flatMap((project) => {
+    const found: CalendarItem[] = [];
+
     if (project.handoverDate && hasValue(project.handoverDate)) {
-      items.push({
+      found.push({
         id: `cal-handover-${project.id}`,
         date: project.handoverDate.value,
         kind: 'handover',
@@ -122,7 +119,7 @@ export function calendarItems(state: CalendarState): CalendarItem[] {
     }
 
     if (project.nextFollowUp) {
-      items.push({
+      found.push({
         id: `cal-followup-${project.id}`,
         date: project.nextFollowUp,
         kind: 'follow-up',
@@ -132,9 +129,22 @@ export function calendarItems(state: CalendarState): CalendarItem[] {
         uncertain: false,
       });
     }
-  }
 
-  return items.sort((a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title));
+    return found;
+  });
+
+export function calendarItems(state: CalendarState): CalendarItem[] {
+  const seesMoney = canSeeMoney({
+    entities: state.entities,
+    currentUserId: state.currentUserId,
+  } satisfies RoleState);
+
+  return [
+    ...taskItems(state),
+    // §3.2: a team member's calendar holds no money, so these are never built.
+    ...(seesMoney ? paymentItems(state) : []),
+    ...projectItems(state),
+  ].sort((a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title));
 }
 
 export type CalendarDay = { date: string; items: CalendarItem[] };
