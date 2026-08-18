@@ -10,11 +10,11 @@
 import { ChangePreview, ChangePreviewLoading } from '@/blocks/ChangePreview';
 import { Chart, ChartLoading, moneyDatum } from '@/blocks/Chart';
 import { DataGrid, DataGridLoading } from '@/blocks/DataGrid';
+import { Gap, GapLoading } from '@/blocks/Gap';
 import { Ledger, LedgerLoading } from '@/blocks/Ledger';
 import { MoneyTimeline, MoneyTimelineLoading } from '@/blocks/MoneyTimeline';
 import { paymentColumns, uncoveredIds } from '@/blocks/paymentColumns';
 import { fieldRow, plainRow, RecordCard, RecordCardLoading } from '@/blocks/RecordCard';
-import { Gap, GapLoading } from '@/blocks/Gap';
 import { Report, ReportLoading } from '@/blocks/Report';
 import { TaskTree, TaskTreeLoading } from '@/blocks/TaskTree';
 import { allGaps, gapsForEntity, gapsInArea } from '@/domain/selectors/gaps';
@@ -1109,18 +1109,14 @@ export const GAP_CASES: LabCase[] = [
     state: 'empty',
     note: 'nothing missing — and says it is not a finished state',
     render: () => (
-      <Gap
-        view={{ subject: 'Iyer Residence', gaps: [], coverage: 0.92, declined: 0 }}
-      />
+      <Gap view={{ subject: 'Iyer Residence', gaps: [], coverage: 0.92, declined: 0 }} />
     ),
   },
   {
     block: '10-gap',
     state: 'populated',
-    note: "vendor terms — what vendors-without-terms composes, answerable inline",
-    render: () => (
-      <Gap view={gapsInArea(GAPS_STATE, 'vendorsProfiles')} onPropose={() => {}} />
-    ),
+    note: 'vendor terms — what vendors-without-terms composes, answerable inline',
+    render: () => <Gap view={gapsInArea(GAPS_STATE, 'vendorsProfiles')} onPropose={() => {}} />,
   },
   {
     block: '10-gap',

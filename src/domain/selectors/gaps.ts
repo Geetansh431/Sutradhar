@@ -15,8 +15,7 @@
 
 import type { EntityId } from '@/domain/types';
 import { AREA_LABELS, INTERVIEW, type InterviewQuestion } from '@/fixtures/ingestion';
-import type { CoverageByArea } from '@/store/store';
-import type { EntityTable } from '@/store/store';
+import type { CoverageByArea, EntityTable } from '@/store/store';
 
 export type GapsState = {
   entities: EntityTable;

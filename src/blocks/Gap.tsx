@@ -68,9 +68,7 @@ export function Gap({ view, onPropose, loading = false, restricted = false }: Ga
           What is missing · {view.subject}
         </span>
         {view.coverage !== null ? (
-          <span className="text-faint text-xs">
-            {Math.round(view.coverage * 100)}% covered
-          </span>
+          <span className="text-faint text-xs">{Math.round(view.coverage * 100)}% covered</span>
         ) : null}
       </figcaption>
 
@@ -88,9 +86,7 @@ export function Gap({ view, onPropose, loading = false, restricted = false }: Ga
               <p className="font-medium text-ink text-sm">{gap.question}</p>
 
               {/* The consequence, not the absence (§9.3). */}
-              <p className="mt-0.5 text-faint text-xs">
-                Blocks {gap.unblocks.join(' and ')}
-              </p>
+              <p className="mt-0.5 text-faint text-xs">Blocks {gap.unblocks.join(' and ')}</p>
 
               {onPropose ? (
                 <div className="mt-2 flex flex-wrap gap-1">

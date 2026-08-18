@@ -17,6 +17,7 @@ import { useMemo, useState } from 'react';
 import { Gap } from '@/blocks/Gap';
 import { CoveragePanel } from '@/chrome/CoveragePanel';
 import { InterviewPanel } from '@/chrome/onboarding/InterviewPanel';
+import { type CoverageArea, gapsInArea } from '@/domain/selectors/gaps';
 import {
   coverageHeader,
   openGaps,
@@ -24,7 +25,6 @@ import {
   sourceCounts,
   whatChanged,
 } from '@/domain/selectors/memory';
-import { type CoverageArea, gapsInArea } from '@/domain/selectors/gaps';
 import type { InterviewQuestion } from '@/fixtures/ingestion';
 import { cn } from '@/lib/cn';
 import { type AppState, useStore } from '@/store/store';

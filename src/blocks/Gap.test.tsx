@@ -85,9 +85,7 @@ describe('Gap — the block', () => {
   });
 
   it('offers the answers inline once it can propose (§8.1)', () => {
-    const html = text(
-      renderToStaticMarkup(<Gap view={view} onPropose={() => {}} />),
-    );
+    const html = text(renderToStaticMarkup(<Gap view={view} onPropose={() => {}} />));
     expect(html).toContain('On delivery');
     expect(html).toContain('nothing is written until you confirm');
   });
@@ -100,7 +98,12 @@ describe('Gap — the block', () => {
   it('proposes rather than writing when an answer is tapped', () => {
     let proposed = 0;
     const html = renderToStaticMarkup(
-      <Gap view={view} onPropose={() => { proposed += 1; }} />,
+      <Gap
+        view={view}
+        onPropose={() => {
+          proposed += 1;
+        }}
+      />,
     );
     // Static render cannot click, so assert the affordance exists and that
     // nothing fired during render.

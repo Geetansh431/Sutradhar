@@ -14,9 +14,9 @@
 import { ChangePreview } from '@/blocks/ChangePreview';
 import { Chart } from '@/blocks/Chart';
 import { DataGrid, FieldCell, type GridColumn } from '@/blocks/DataGrid';
+import { Gap } from '@/blocks/Gap';
 import { MoneyTimeline } from '@/blocks/MoneyTimeline';
 import { paymentColumns, uncoveredIds } from '@/blocks/paymentColumns';
-import { Gap } from '@/blocks/Gap';
 import { Report } from '@/blocks/Report';
 import { TaskTree } from '@/blocks/TaskTree';
 import type { BlockRef } from '@/canvas/plan';
