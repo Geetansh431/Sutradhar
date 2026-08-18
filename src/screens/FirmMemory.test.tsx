@@ -66,13 +66,15 @@ describe('coverage by area carries a reason — §6.8', () => {
   const reasons = shortfallReasons(live);
 
   it('gives each shortfall a one-line reason', () => {
-    expect(reasons.moneyVendorSide).toBe('1 vendor, no terms');
-    expect(text(html)).toContain('1 vendor, no terms');
+    // The terms gap sits with "Vendors & terms", alongside the question that
+    // closes it — so clicking that bar opens the gap that explains the reason.
+    expect(reasons.vendorsProfiles).toBe('2 of 3 — 1 vendor has no terms');
+    expect(text(html)).toContain('1 vendor has no terms');
   });
 
   it('counts vendors without terms rather than asserting a number', () => {
     const noVendors = { ...live, entities: {} };
-    expect(shortfallReasons(noVendors).moneyVendorSide).toBeUndefined();
+    expect(shortfallReasons(noVendors).vendorsProfiles).toBe('0 of 0');
   });
 
   it('keeps the copy that says the gaps are the point', () => {

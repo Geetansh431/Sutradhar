@@ -1,6 +1,6 @@
 # Sutradhar — build state and handoff
 
-**Last updated:** 17 August 2026 · at commit `1c77ac0`+ · 395 tests passing · working tree clean
+**Last updated:** 18 August 2026 · at commit `7cddd9f`+ · 410 tests passing · working tree clean
 
 This document exists so a new session can continue without re-deriving context. It says what
 the thing is, what is built, what is not, and what to do next. `CLAUDE.md` holds the rules;
@@ -127,7 +127,7 @@ That test passes no override, so it asserts on the screens' static headings rath
 
 ---
 
-## Built — blocks (8 of 10)
+## Built — blocks (9 of 10)
 
 The vocabulary is closed at ten (`CLAUDE.md` rule 7). Each built block appears in `/lab` in all
 seven states: loading, empty, populated, one unconfirmed field, one conflicting field, one
@@ -143,16 +143,16 @@ missing field, role-restricted.
 | 07 | Chart | `src/blocks/Chart.tsx` | `'bar' \| 'hbar' \| 'timeline' \| 'stacked'` as a closed union |
 | 08 | Task tree | `src/blocks/TaskTree.tsx` | Nests to any depth, drag to re-parent, `treeitem` roles with a roving tabindex. `highlightIds` lets the Canvas show which rows an answer is about |
 | 09 | Change preview | `src/blocks/ChangePreview.tsx` | `changeTag` derives NEW/EDIT/LINK/ARCHIVE from the op, so DELETE is unrepresentable. ⌘↵ confirms |
+| 10 | Gap | `src/blocks/Gap.tsx` | Scoped by area or entity — "what is missing *here*". Answers inline via a preview, unlike the onboarding interview which writes directly |
 
-### Not built (2)
+### Not built (1)
 
 | # | Block | Blocks what |
 |---|---|---|
 | 05 | Document viewer | The source with its passage highlighted. Wanted for its own sake — Files now lists documents but nothing opens one |
-| 10 | Gap | What is missing here and what it blocks. Firm Memory currently renders gaps inline |
 
 `/lab` renders unbuilt blocks as explicit "not built" tiles rather than omitting them, and the
-header reads "8 of 10 blocks built" off `BLOCKS.length` — so the counter cannot drift.
+header reads "9 of 10 blocks built" off `BLOCKS.length` — so the counter cannot drift.
 
 ---
 
@@ -225,6 +225,14 @@ traces to a payment the demo already shows. Full reasoning in the header of
 either scheduled-ahead or overdue, and `paid` is a third category. If a test starts failing on a
 count of payments, check whether it means *open* payments.
 
+**Both vendor-terms questions live in `vendorsProfiles`.** `q-godrej-terms` used to sit in
+`moneyVendorSide`, which split the two questions that ask a vendor the same thing across two
+coverage areas — so `vendors-without-terms`, scoped to "Vendors & terms", found nothing missing
+while w11 plainly draws Godrej's terms as "unknown". The shortfall reason moved with it:
+"Money — vendor side" now reads "bills not reconciled", which is what that area is actually
+about. **A question's `area` decides which coverage bar opens it (§6.8), so it is a routing
+decision, not a label.**
+
 **One fixture conflict, resolved and documented** in `firm.ts`'s header: w09 puts Godrej's
 payment at ₹1,70,000 and builds the coverage gap on it; w11's exposure column says ₹1,50,000.
 **w09 wins** because the gap is load-bearing for the 4:00 beat — total exposure is ₹6,62,000.
@@ -238,22 +246,22 @@ The planner returns a **plan** — block types, entity refs, filters. Never a va
 the build even if the figure is correct. The resolver fills values from the store and builds
 mandatory caveats naming each unconfirmed figure.
 
-Eight canned questions in `questions.ts`, covering all six §5.4 shapes. **Six have plans, five
-answer fully:**
+Eight canned questions in `questions.ts`, covering all six §5.4 shapes. **Six have plans, and
+all six answer fully:**
 
 | Question | Group | Status |
 |---|---|---|
 | `vendor-exposure` | money | ✅ the 2:30 beat |
 | `uncovered-payments` | money | ✅ |
 | `owed-to-sharma` | money | ✅ |
-| `vendors-without-terms` | people | ⚠️ plan resolves, but its only block is 10 — the working area currently reads "Gap block (10) is not built yet" |
+| `vendors-without-terms` | people | ✅ composes block 10 |
 | `kormangala-handover` | projects | ✅ composes block 08 |
 | `july-across-projects` | money | ✅ composes block 06 |
 | `iyer-margin` | projects | ⛔ no plan — see the margin note below |
 | `sharma-bill-capture` | capture | ↪ not unanswered — takes the capture path (§7.6) |
 
-`CoPanel` renders `data-grid`, `chart`, `money-timeline`, `task-tree` and `report`. A plan naming
-a block it cannot draw says so rather than rendering nothing.
+`CoPanel` renders every block a plan can name: `data-grid`, `chart`, `money-timeline`,
+`task-tree`, `report` and `gap`. **No answer shows scaffolding on screen any more.**
 
 **A headline must lead with `{metric}`.** The co-panel lifts the figure into the large line and
 renders the remainder as the subtitle, so "July closed at {metric} across the firm" renders as
@@ -289,19 +297,15 @@ Ordered by what it buys the demo. **Everything the two previous handoffs listed 
 block 08, the project workspace, `kormangala-handover`, all three dead rail links, block 06 and
 `july-across-projects`. The margin question is settled: 37.0%, recorded above, do not re-open.
 
-### 1. Blocks 10 and 05
+### 1. Block 05 — document viewer
 
-Neither unlocks a question — `iyer-margin` is the only one still without a plan, and it wants no
-block, just a decision about what a margin answer should say now that the figure is settled.
+The last of the ten. It unlocks no question: `sharma-bill-capture` takes the capture path by
+design. It is wanted for its own sake — "the source, passage highlighted" is the visible proof
+behind provenance, and nothing on screen shows a source document at all. Files sharpens the
+case, since it lists every document and admits plainly that opening one needs a viewer.
 
-**Block 10 is the higher-value of the two**, because one question is already half-answered
-without it: `vendors-without-terms` has a valid plan whose only block is a `gap`, so its working
-area currently reads "Gap block (10) is not built yet". It is the one place the demo shows its
-own scaffolding. Firm Memory also renders gaps inline today and would be tidier composing it.
-
-Block 05 (document viewer) is **not** required by `sharma-bill-capture`, which takes the capture
-path by design. It is wanted for its own sake, and Files now sharpens the case: the screen lists
-every document and says plainly that opening one needs a viewer that isn't built.
+`iyer-margin` is the only question still without a plan, and it wants no block — just a decision
+about what a margin answer should say now that the figure is settled at 37.0%.
 
 ### 2. Settings is thinner than §6.9
 

@@ -77,14 +77,16 @@ export function shortfallReasons(state: MemoryState): Partial<Record<CoverageAre
   return {
     projectsStages: `${projectsWithStage} of ${projects.length} projects`,
     moneyClientSide: 'instalments mapped',
-    ...(vendorsWithoutTerms > 0
-      ? {
-          moneyVendorSide: `${vendorsWithoutTerms} ${
-            vendorsWithoutTerms === 1 ? 'vendor' : 'vendors'
-          }, no terms`,
-        }
-      : {}),
-    vendorsProfiles: `${vendors.length - vendorsWithoutTerms} of ${vendors.length}`,
+    // Unbilled and unpaid money, not missing terms — the terms gap belongs to
+    // "Vendors & terms", alongside the question that closes it, so clicking
+    // the bar opens the gap that explains it (§6.8).
+    moneyVendorSide: 'bills not reconciled',
+    vendorsProfiles:
+      vendorsWithoutTerms > 0
+        ? `${vendors.length - vendorsWithoutTerms} of ${vendors.length} — ${vendorsWithoutTerms} ${
+            vendorsWithoutTerms === 1 ? 'vendor has' : 'vendors have'
+          } no terms`
+        : `${vendors.length} of ${vendors.length}`,
     teamLeaveSalary: people.length > 0 ? 'attendance not started' : 'no team recorded',
     companyFinances: 'cash position stale',
   };

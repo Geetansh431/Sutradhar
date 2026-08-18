@@ -208,6 +208,15 @@ describe('when the Canvas cannot answer — §7.7', () => {
     expect(html).not.toContain('11 Oct');
   });
 
+  it('the terms question composes block 10 instead of showing scaffolding', () => {
+    const html = text(render('vendors-without-terms'));
+    expect(html).toContain('Godrej dealer — what are their payment terms?');
+    expect(html).toContain('Blocks vendor ledger and coverage warnings');
+    // This is what it used to say, and the one place the demo showed its own
+    // unbuilt parts on screen.
+    expect(html).not.toContain('is not built yet');
+  });
+
   it('an unknown question offers what can be asked instead', () => {
     const html = render('what-is-the-weather');
     expect(text(html)).toContain('Nothing canned matches that');

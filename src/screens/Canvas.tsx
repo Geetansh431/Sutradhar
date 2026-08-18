@@ -22,7 +22,7 @@ import { canSeeMoney } from '@/domain/selectors/role';
 import type { Document, EntityId } from '@/domain/types';
 import { nowISO } from '@/lib/dates';
 import { applyChange, type ChangeSet } from '@/store/change';
-import { type EntityTable, useStore } from '@/store/store';
+import { type CoverageByArea, type EntityTable, useStore } from '@/store/store';
 
 export type CanvasProps = {
   /** See `MoneyProps` — a static render never sees a store reset. */
@@ -30,6 +30,9 @@ export type CanvasProps = {
     entities: EntityTable;
     documents: Document[];
     currentUserId: EntityId | null;
+    /** Only the gap block reads these; omitted, they come from the store. */
+    coverageByArea?: CoverageByArea;
+    onboarding?: { answered: Record<string, string>; skipped: Record<string, number> };
   };
   questionId?: string;
 };
@@ -39,11 +42,23 @@ export function Canvas({ stateOverride, questionId: questionProp }: CanvasProps 
   const storeEntities = useStore((s) => s.entities);
   const storeDocuments = useStore((s) => s.documents);
   const storeUserId = useStore((s) => s.currentUserId);
+  const storeCoverage = useStore((s) => s.coverageByArea);
+  const storeOnboarding = useStore((s) => s.onboarding);
   const pin = useStore((s) => s.pin);
 
   const entities = stateOverride?.entities ?? storeEntities;
   const documents = stateOverride?.documents ?? storeDocuments;
   const currentUserId = stateOverride ? stateOverride.currentUserId : storeUserId;
+
+  // The gap block needs what the firm knows it does not know. Read here rather
+  // than resolved, because a gap is not a figure — it is the absence of one.
+  const gapState = {
+    coverageByArea: stateOverride?.coverageByArea ?? storeCoverage,
+    onboarding: stateOverride?.onboarding ?? {
+      answered: storeOnboarding.answered,
+      skipped: storeOnboarding.skipped,
+    },
+  };
 
   const [pending, setPending] = useState<ChangeSet | null>(null);
   const [pinned, setPinned] = useState(false);
@@ -95,6 +110,7 @@ export function Canvas({ stateOverride, questionId: questionProp }: CanvasProps 
       <CoPanel
         answer={answer}
         entities={entities}
+        gapState={gapState}
         pending={pending}
         pinned={pinned}
         onPropose={setPending}

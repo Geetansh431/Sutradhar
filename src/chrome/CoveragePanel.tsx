@@ -21,10 +21,15 @@ export function CoveragePanel({
   title = 'Firm coverage',
   /** Per-area reasons, as w10 shows them ("6 vendors, no terms"). */
   reasons,
+  onSelectArea,
+  selectedArea,
 }: {
   coverage: CoverageByArea;
   title?: string;
   reasons?: Partial<Record<keyof CoverageByArea, string>>;
+  /** §6.8: "Clicking an area opens the gaps behind it." */
+  onSelectArea?: (area: keyof CoverageByArea) => void;
+  selectedArea?: keyof CoverageByArea | null;
 }) {
   const areas = Object.keys(AREA_LABELS) as (keyof CoverageByArea)[];
 
@@ -37,7 +42,26 @@ export function CoveragePanel({
           const value = coverage[area];
           return (
             <li key={area}>
-              <div className="flex items-center gap-3">
+              <div
+                className={cn(
+                  'flex items-center gap-3 rounded px-1 py-0.5',
+                  onSelectArea && 'cursor-pointer hover:bg-fill-2',
+                  selectedArea === area && 'bg-fill-2',
+                )}
+                {...(onSelectArea
+                  ? {
+                      role: 'button',
+                      tabIndex: 0,
+                      onClick: () => onSelectArea(area),
+                      onKeyDown: (event: React.KeyboardEvent) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          onSelectArea(area);
+                        }
+                      },
+                    }
+                  : {})}
+              >
                 <span className="w-40 shrink-0 text-ink text-sm">{AREA_LABELS[area]}</span>
                 <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-fill-2">
                   <span

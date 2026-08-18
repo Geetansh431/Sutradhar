@@ -14,8 +14,10 @@ import { Ledger, LedgerLoading } from '@/blocks/Ledger';
 import { MoneyTimeline, MoneyTimelineLoading } from '@/blocks/MoneyTimeline';
 import { paymentColumns, uncoveredIds } from '@/blocks/paymentColumns';
 import { fieldRow, plainRow, RecordCard, RecordCardLoading } from '@/blocks/RecordCard';
+import { Gap, GapLoading } from '@/blocks/Gap';
 import { Report, ReportLoading } from '@/blocks/Report';
 import { TaskTree, TaskTreeLoading } from '@/blocks/TaskTree';
+import { allGaps, gapsForEntity, gapsInArea } from '@/domain/selectors/gaps';
 import { type MoneyState, moneyWindow } from '@/domain/selectors/money';
 import { ledgerFor } from '@/domain/selectors/people';
 import { type ReportTemplate, runReport, TEMPLATE_LABEL } from '@/domain/selectors/report';
@@ -1081,6 +1083,80 @@ export const REPORT_CASES: LabCase[] = [
   },
 ];
 
+/**
+ * Block 10's cases.
+ *
+ * A gap *is* a missing field, so the usual three field states do not map
+ * cleanly onto it. What varies instead is scope and history — which is what the
+ * block actually differs by: an area, one entity, a firm with nothing left to
+ * ask, and one that has declined to answer.
+ */
+const GAPS_STATE = {
+  entities: LIVE.entities,
+  coverageByArea: buildState('live').coverageByArea,
+  onboarding: { answered: {}, skipped: {} },
+};
+
+export const GAP_CASES: LabCase[] = [
+  {
+    block: '10-gap',
+    state: 'loading',
+    note: 'question-shaped skeletons',
+    render: () => <GapLoading />,
+  },
+  {
+    block: '10-gap',
+    state: 'empty',
+    note: 'nothing missing — and says it is not a finished state',
+    render: () => (
+      <Gap
+        view={{ subject: 'Iyer Residence', gaps: [], coverage: 0.92, declined: 0 }}
+      />
+    ),
+  },
+  {
+    block: '10-gap',
+    state: 'populated',
+    note: "vendor terms — what vendors-without-terms composes, answerable inline",
+    render: () => (
+      <Gap view={gapsInArea(GAPS_STATE, 'vendorsProfiles')} onPropose={() => {}} />
+    ),
+  },
+  {
+    block: '10-gap',
+    state: 'unconfirmed',
+    note: 'firm-wide: every gap still open, across all six areas',
+    render: () => <Gap view={allGaps(GAPS_STATE)} onPropose={() => {}} />,
+  },
+  {
+    block: '10-gap',
+    state: 'conflicting',
+    note: 'asked twice and skipped twice — counted, never re-asked (§5.3)',
+    render: () => (
+      <Gap
+        view={allGaps({
+          ...GAPS_STATE,
+          onboarding: { answered: {}, skipped: { 'q-godrej-terms': 2 } },
+        })}
+      />
+    ),
+  },
+  {
+    block: '10-gap',
+    state: 'missing',
+    note: 'scoped to one entity — Godrej, whose terms nobody holds',
+    render: () => (
+      <Gap view={gapsForEntity(GAPS_STATE, 'vendor-godrej-dealer')} onPropose={() => {}} />
+    ),
+  },
+  {
+    block: '10-gap',
+    state: 'restricted',
+    note: 'Team — what the firm does not know about money is not theirs',
+    render: () => <Gap view={allGaps(GAPS_STATE)} restricted />,
+  },
+];
+
 export const ALL_CASES: LabCase[] = [
   ...MONEY_TIMELINE_CASES,
   ...DATA_GRID_CASES,
@@ -1090,4 +1166,5 @@ export const ALL_CASES: LabCase[] = [
   ...LEDGER_CASES,
   ...TASK_TREE_CASES,
   ...REPORT_CASES,
+  ...GAP_CASES,
 ];

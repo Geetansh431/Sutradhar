@@ -13,7 +13,8 @@
  * product on its most honest screen.
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { Gap } from '@/blocks/Gap';
 import { CoveragePanel } from '@/chrome/CoveragePanel';
 import { InterviewPanel } from '@/chrome/onboarding/InterviewPanel';
 import {
@@ -23,6 +24,7 @@ import {
   sourceCounts,
   whatChanged,
 } from '@/domain/selectors/memory';
+import { type CoverageArea, gapsInArea } from '@/domain/selectors/gaps';
 import type { InterviewQuestion } from '@/fixtures/ingestion';
 import { cn } from '@/lib/cn';
 import { type AppState, useStore } from '@/store/store';
@@ -40,6 +42,10 @@ export function FirmMemory({ stateOverride }: FirmMemoryProps = {}) {
   const skipQuestion = useStore((s) => s.skipQuestion);
 
   const state = stateOverride ?? storeState;
+
+  // §6.8's "clicking an area opens the gaps behind it" — one area at a time,
+  // and clicking the open one closes it.
+  const [area, setArea] = useState<CoverageArea | null>(null);
 
   const view = useMemo(
     () => ({
@@ -94,11 +100,33 @@ export function FirmMemory({ stateOverride }: FirmMemoryProps = {}) {
 
       <div className="grid items-start gap-4 lg:grid-cols-2">
         {/* Coverage by area, with a reason under each shortfall. */}
-        <CoveragePanel
-          coverage={state.coverageByArea}
-          title="Coverage by area"
-          reasons={view.reasons}
-        />
+        <div className="space-y-4">
+          <CoveragePanel
+            coverage={state.coverageByArea}
+            title="Coverage by area"
+            reasons={view.reasons}
+            onSelectArea={(area) => setArea((current) => (current === area ? null : area))}
+            selectedArea={area}
+          />
+
+          {/* §6.8: "Clicking an area opens the gaps behind it." Read-only —
+              "Fill a gap" below owns answering, because it also owns skipping,
+              and §5.3's "asked twice, skipped twice" needs somewhere to happen. */}
+          {area ? (
+            <section className="rounded-md border border-line bg-panel p-4">
+              <Gap
+                view={gapsInArea(
+                  {
+                    entities: state.entities,
+                    coverageByArea: state.coverageByArea,
+                    onboarding: state.onboarding,
+                  },
+                  area,
+                )}
+              />
+            </section>
+          ) : null}
+        </div>
 
         <div className="space-y-4">
           {/* The interview, permanently available (§6.8). */}

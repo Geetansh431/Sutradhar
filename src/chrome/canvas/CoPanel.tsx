@@ -16,10 +16,12 @@ import { Chart } from '@/blocks/Chart';
 import { DataGrid, FieldCell, type GridColumn } from '@/blocks/DataGrid';
 import { MoneyTimeline } from '@/blocks/MoneyTimeline';
 import { paymentColumns, uncoveredIds } from '@/blocks/paymentColumns';
+import { Gap } from '@/blocks/Gap';
 import { Report } from '@/blocks/Report';
 import { TaskTree } from '@/blocks/TaskTree';
 import type { BlockRef } from '@/canvas/plan';
 import type { EvidenceCard, ResolvedAnswer } from '@/canvas/resolver';
+import { type GapsState, gapsInArea, isCoverageArea } from '@/domain/selectors/gaps';
 import { moneyWindow } from '@/domain/selectors/money';
 import { buildReport } from '@/domain/selectors/report';
 import { taskTree } from '@/domain/selectors/tasks';
@@ -81,7 +83,16 @@ const blockKey = (block: BlockRef): string => {
 };
 
 /** Renders one block of a plan. The plan names the type; this maps it. */
-function PlannedBlock({ block, entities }: { block: BlockRef; entities: EntityTable }) {
+function PlannedBlock({
+  block,
+  entities,
+  gapState,
+}: {
+  block: BlockRef;
+  entities: EntityTable;
+  /** Coverage and interview history — only the gap block reads these. */
+  gapState: Omit<GapsState, 'entities'>;
+}) {
   switch (block.block) {
     case 'data-grid': {
       if (block.query.from === 'vendors') {
@@ -166,10 +177,17 @@ function PlannedBlock({ block, entities }: { block: BlockRef; entities: EntityTa
     }
 
     case 'gap':
-      // Block 10 is not built yet. Saying so is better than rendering nothing.
-      return (
+      // Read-only in the co-panel: answering here would write from inside an
+      // answer, and the Canvas's whole contract is that it proposes. The gaps
+      // are answerable on Firm Memory, which owns them.
+      // The plan's `area` is a string by schema, so it is checked rather than
+      // cast (rule 8). A plan naming an area the firm does not track is a bug
+      // worth seeing, not one worth coercing into a valid-looking answer.
+      return isCoverageArea(block.area) ? (
+        <Gap view={gapsInArea({ entities, ...gapState }, block.area)} />
+      ) : (
         <p className="py-6 text-center text-faint text-sm">
-          Gap block (10) is not built yet — this answer needs it.
+          This answer asks for an area the firm does not track: “{block.area}”.
         </p>
       );
 
@@ -208,6 +226,7 @@ function EvidenceColumn({ cards }: { cards: EvidenceCard[] }) {
 export function CoPanel({
   answer,
   entities,
+  gapState,
   pending,
   pinned,
   onPropose,
@@ -217,6 +236,8 @@ export function CoPanel({
 }: {
   answer: ResolvedAnswer;
   entities: EntityTable;
+  /** Coverage and interview history, for the gap block. */
+  gapState: Omit<GapsState, 'entities'>;
   pending: ChangeSet | null;
   pinned: boolean;
   onPropose: (changeSet: ChangeSet) => void;
@@ -261,7 +282,7 @@ export function CoPanel({
           {/* WORKING AREA — centre-left, below the answer. One to three blocks. */}
           {answer.blocks.map((block) => (
             <div key={blockKey(block)} className="rounded-md border border-line bg-paper p-3">
-              <PlannedBlock block={block} entities={entities} />
+              <PlannedBlock block={block} entities={entities} gapState={gapState} />
             </div>
           ))}
         </div>

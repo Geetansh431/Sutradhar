@@ -164,7 +164,11 @@ export const INTERVIEW: InterviewQuestion[] = [
     options: ['30 days', '45 days', 'On delivery', "Don't know"],
     unblocks: ['vendor ledger', 'coverage warnings'],
     target: 'vendor-godrej-dealer',
-    area: 'moneyVendorSide',
+    // "Vendors & terms", with the other terms question — not "Money — vendor
+    // side". Both ask a vendor the same thing, and splitting them meant
+    // `vendors-without-terms` scoped to this area found nothing missing while
+    // Godrej's terms were plainly absent (w11 draws them "unknown").
+    area: 'vendorsProfiles',
   },
   {
     id: 'q-cafe-owner',
