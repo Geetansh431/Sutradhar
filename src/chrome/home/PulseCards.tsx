@@ -7,10 +7,10 @@
  */
 
 import { Link } from 'react-router';
-import { useScenarioPath } from '@/lib/scenarioLink';
 import type { Pulse } from '@/domain/selectors/home';
 import { cn } from '@/lib/cn';
 import { formatShortINR } from '@/lib/money';
+import { useScenarioPath } from '@/lib/scenarioLink';
 
 type Tone = 'ok' | 'plain' | 'alert';
 

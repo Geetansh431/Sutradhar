@@ -17,7 +17,6 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
-import { useScenarioPath } from '@/lib/scenarioLink';
 import { CoveragePanel } from '@/chrome/CoveragePanel';
 import { DropZone } from '@/chrome/onboarding/DropZone';
 import { IngestedList } from '@/chrome/onboarding/IngestedList';
@@ -30,6 +29,7 @@ import {
   INTERVIEW_VISIBLE,
   type InterviewQuestion,
 } from '@/fixtures/ingestion';
+import { useScenarioPath } from '@/lib/scenarioLink';
 import { useStore } from '@/store/store';
 
 const STEP_LABEL = {

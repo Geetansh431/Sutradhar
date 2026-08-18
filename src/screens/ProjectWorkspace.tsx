@@ -12,7 +12,6 @@
 
 import { useMemo, useState } from 'react';
 import { Navigate, useParams } from 'react-router';
-import { useScenarioPath } from '@/lib/scenarioLink';
 import { ChangePreview } from '@/blocks/ChangePreview';
 import { TaskTree } from '@/blocks/TaskTree';
 import { ModeSwitch } from '@/chrome/ModeSwitch';
@@ -26,6 +25,7 @@ import { moneyWindow } from '@/domain/selectors/money';
 import { taskTree } from '@/domain/selectors/tasks';
 import { workspace } from '@/domain/selectors/workspace';
 import type { EntityId, SiteNote } from '@/domain/types';
+import { useScenarioPath } from '@/lib/scenarioLink';
 import { applyChange, type ChangeSet } from '@/store/change';
 import { type EntityTable, useStore } from '@/store/store';
 

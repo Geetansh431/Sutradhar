@@ -11,9 +11,9 @@
  */
 
 import { NavLink } from 'react-router';
-import { useScenarioPath } from '@/lib/scenarioLink';
 import type { Destination } from '@/domain/selectors/role';
 import { cn } from '@/lib/cn';
+import { useScenarioPath } from '@/lib/scenarioLink';
 import type { PinnedScreen } from '@/store/store';
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>

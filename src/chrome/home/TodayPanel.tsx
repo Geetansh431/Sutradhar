@@ -7,8 +7,8 @@
  */
 
 import { Link } from 'react-router';
-import { useScenarioPath } from '@/lib/scenarioLink';
 import type { TodayItem } from '@/domain/selectors/home';
+import { useScenarioPath } from '@/lib/scenarioLink';
 
 export function TodayPanel({ items }: { items: TodayItem[] }) {
   const link = useScenarioPath();

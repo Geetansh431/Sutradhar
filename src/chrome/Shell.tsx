@@ -7,13 +7,13 @@
  */
 
 import { Outlet, useNavigate } from 'react-router';
-import { useScenarioPath } from '@/lib/scenarioLink';
 import { AskBar } from '@/chrome/AskBar';
 import { PrototypeBadge } from '@/chrome/ModeSwitch';
 import { Rail } from '@/chrome/Rail';
 import { RoleSwitcher } from '@/chrome/RoleSwitcher';
 import { currentPerson, destinations, visiblePins } from '@/domain/selectors/role';
 import type { Person } from '@/domain/types';
+import { useScenarioPath } from '@/lib/scenarioLink';
 import { useStore } from '@/store/store';
 
 /** "AK" — the initials shown top-right on every wireframe. */

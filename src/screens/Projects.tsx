@@ -13,7 +13,6 @@
 
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
-import { useScenarioPath } from '@/lib/scenarioLink';
 import { ChangePreview } from '@/blocks/ChangePreview';
 import { DataGrid, FieldCell, type GridColumn } from '@/blocks/DataGrid';
 import { type ModeOption, ModeSwitch } from '@/chrome/ModeSwitch';
@@ -31,6 +30,7 @@ import {
 import { canSeeMoney } from '@/domain/selectors/role';
 import type { EntityId, PipelineStage } from '@/domain/types';
 import { formatINR } from '@/lib/money';
+import { useScenarioPath } from '@/lib/scenarioLink';
 import { applyChange, type ChangeSet, proposeChangeSet } from '@/store/change';
 import { type EntityTable, useStore } from '@/store/store';
 
