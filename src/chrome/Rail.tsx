@@ -11,6 +11,7 @@
  */
 
 import { NavLink } from 'react-router';
+import { useScenarioPath } from '@/lib/scenarioLink';
 import type { Destination } from '@/domain/selectors/role';
 import { cn } from '@/lib/cn';
 import type { PinnedScreen } from '@/store/store';
@@ -32,6 +33,10 @@ export function Rail({
   pins: PinnedScreen[];
   onUnpin?: (id: string) => void;
 }) {
+  // Every link keeps `?s=` — a refresh from a deep link would otherwise
+  // silently reseed the demo as `live`.
+  const link = useScenarioPath();
+
   return (
     <nav
       aria-label="Main"
@@ -45,7 +50,11 @@ export function Rail({
         <ul>
           {destinations.map((destination) => (
             <li key={destination.path}>
-              <NavLink to={destination.path} end={destination.path === '/'} className={linkClass}>
+              <NavLink
+                to={link(destination.path)}
+                end={destination.path === '/'}
+                className={linkClass}
+              >
                 {destination.label}
               </NavLink>
             </li>
@@ -59,7 +68,7 @@ export function Rail({
             <ul>
               {pins.map((pin) => (
                 <li key={pin.id} className="group relative">
-                  <NavLink to={`/canvas/${pin.questionId}`} className={linkClass}>
+                  <NavLink to={link(`/canvas/${pin.questionId}`)} className={linkClass}>
                     {pin.name}
                   </NavLink>
                   {onUnpin ? (
@@ -81,7 +90,7 @@ export function Rail({
 
       {/* "Settings — tucked in the rail footer" (§4.1). */}
       <div className="border-line border-t px-2 py-2">
-        <NavLink to="/settings" className={linkClass}>
+        <NavLink to={link('/settings')} className={linkClass}>
           Settings
         </NavLink>
       </div>

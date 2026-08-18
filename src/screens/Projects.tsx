@@ -13,6 +13,7 @@
 
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
+import { useScenarioPath } from '@/lib/scenarioLink';
 import { ChangePreview } from '@/blocks/ChangePreview';
 import { DataGrid, FieldCell, type GridColumn } from '@/blocks/DataGrid';
 import { type ModeOption, ModeSwitch } from '@/chrome/ModeSwitch';
@@ -58,7 +59,11 @@ const modesFor = (seesMoney: boolean): ModeOption<Mode>[] =>
   seesMoney ? ALL_MODES : ALL_MODES.filter((mode) => mode.id !== 'board');
 
 /** List mode's columns (§6.2). Money is dropped for a team member (§3.2). */
-const columnsFor = (seesMoney: boolean): GridColumn<ProjectRow>[] => {
+const columnsFor = (
+  seesMoney: boolean,
+  /** Keeps `?s=` on the way into a workspace. */
+  link: (path: string) => string,
+): GridColumn<ProjectRow>[] => {
   const columns: GridColumn<ProjectRow>[] = [
     {
       id: 'name',
@@ -66,7 +71,7 @@ const columnsFor = (seesMoney: boolean): GridColumn<ProjectRow>[] => {
       // The way into the workspace (§6.3). A pipeline card is an enquiry and
       // has no workspace yet, so the link lives here rather than on the board.
       cell: (row) => (
-        <Link to={`/projects/${row.id}`} className="text-ink hover:underline">
+        <Link to={link(`/projects/${row.id}`)} className="text-ink hover:underline">
           {row.name}
         </Link>
       ),
@@ -120,6 +125,7 @@ export function Projects({ stateOverride }: ProjectsProps = {}) {
   const [dismissed, setDismissed] = useState<ReadonlySet<string>>(new Set());
 
   const seesMoney = canSeeMoney({ entities, currentUserId });
+  const link = useScenarioPath();
   // A team member never lands on the board, even by default.
   const activeMode: Mode = !seesMoney && mode === 'board' ? 'list' : mode;
 
@@ -179,7 +185,7 @@ export function Projects({ stateOverride }: ProjectsProps = {}) {
         <section className="rounded-md border border-line bg-paper p-4">
           <DataGrid
             rows={view.rows}
-            columns={columnsFor(seesMoney)}
+            columns={columnsFor(seesMoney, link)}
             rowId={(row) => row.id}
             caption="Projects"
             emptyMessage="No projects yet."

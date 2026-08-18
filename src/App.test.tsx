@@ -13,7 +13,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
-import { AppRoutes } from '@/App';
+import { AppRoutes, belongsInOnboarding } from '@/App';
 import { destinations } from '@/domain/selectors/role';
 import { buildState } from '@/fixtures/scenarios';
 
@@ -80,6 +80,20 @@ describe('every rail destination reaches its own screen', () => {
     // workspace at all; the workspace's own rendering is tested with an
     // override in `ProjectWorkspace.test.tsx`.
     expect(text(at('/projects/project-iyer'))).toContain('No such project');
+  });
+
+  it('gates only a firm that has ingested nothing', () => {
+    // `App` seeds the store *during render*, not in an effect. The store's
+    // initial `step` is 'seed' and the gate reads it on the first render, so
+    // seeding afterwards meant `/?s=live` redirected to onboarding and
+    // `replace` made it stick — the opening beat when the demo asked for the
+    // mid-demo firm.
+    //
+    // Tested through the rule rather than the route: `renderToStaticMarkup`
+    // does not follow a `Navigate`, so a routing test cannot see the decision.
+    expect(belongsInOnboarding(buildState('fresh').onboarding.step)).toBe(true);
+    expect(belongsInOnboarding(buildState('live').onboarding.step)).toBe(false);
+    expect(belongsInOnboarding(buildState('extracted').onboarding.step)).toBe(false);
   });
 
   it('an unknown path redirects rather than rendering an unknown screen', () => {

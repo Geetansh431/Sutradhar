@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router';
 import { Shell } from '@/chrome/Shell';
 import { buildState, readScenarioFromUrl } from '@/fixtures/scenarios';
@@ -14,7 +14,7 @@ import { People } from '@/screens/People';
 import { Projects } from '@/screens/Projects';
 import { ProjectWorkspaceRoute } from '@/screens/ProjectWorkspace';
 import { Settings } from '@/screens/Settings';
-import { useStore } from '@/store/store';
+import { type OnboardingStep, useStore } from '@/store/store';
 
 /**
  * A firm that has ingested nothing belongs in onboarding — the demo's 0:30
@@ -24,10 +24,18 @@ import { useStore } from '@/store/store';
  * redirect that dropped it would silently reseed the demo as `live` on the next
  * refresh, showing the wrong firm at the opening.
  */
+/**
+ * Whether a firm at this step belongs in onboarding.
+ *
+ * Exported so the gate's rule can be tested directly: `renderToStaticMarkup`
+ * does not follow a `Navigate`, so a routing test cannot observe the decision.
+ */
+export const belongsInOnboarding = (step: OnboardingStep): boolean => step === 'seed';
+
 function OnboardingGate() {
   const step = useStore((s) => s.onboarding.step);
   const { search } = useLocation();
-  return step === 'seed' ? <Navigate to={`/onboarding${search}`} replace /> : <Home />;
+  return belongsInOnboarding(step) ? <Navigate to={`/onboarding${search}`} replace /> : <Home />;
 }
 
 /**
@@ -38,11 +46,14 @@ function useScenario() {
   const reset = useStore((s) => s.reset);
   const seeded = useRef(false);
 
-  useEffect(() => {
-    if (seeded.current) return;
+  // Seeded during render, not in an effect. The store's initial `step` is
+  // 'seed', and `OnboardingGate` reads it on the *first* render — so seeding
+  // afterwards meant `/?s=live` redirected to onboarding and `replace` made it
+  // stick, showing the opening beat when the demo asked for the mid-demo firm.
+  if (!seeded.current) {
     seeded.current = true;
     reset(buildState(readScenarioFromUrl()));
-  }, [reset]);
+  }
 }
 
 /**

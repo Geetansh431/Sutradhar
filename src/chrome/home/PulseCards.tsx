@@ -7,6 +7,7 @@
  */
 
 import { Link } from 'react-router';
+import { useScenarioPath } from '@/lib/scenarioLink';
 import type { Pulse } from '@/domain/selectors/home';
 import { cn } from '@/lib/cn';
 import { formatShortINR } from '@/lib/money';
@@ -19,6 +20,7 @@ const toneClass = (tone: Tone): string =>
   tone === 'ok' ? 'text-ok' : tone === 'alert' ? 'text-brand' : 'text-ink';
 
 export function PulseCards({ pulse }: { pulse: Pulse }) {
+  const link = useScenarioPath();
   const cards: Card[] = [
     {
       figure: formatShortINR(pulse.collectibleThisWeek),
@@ -51,7 +53,7 @@ export function PulseCards({ pulse }: { pulse: Pulse }) {
       {cards.map((card) => (
         <Link
           key={card.label}
-          to={card.to}
+          to={link(card.to)}
           className="rounded-md border border-line bg-paper px-4 py-3 transition-colors hover:border-line-strong"
         >
           <p className={cn('tabular font-display text-2xl', toneClass(card.tone))}>{card.figure}</p>

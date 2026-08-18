@@ -17,6 +17,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
+import { useScenarioPath } from '@/lib/scenarioLink';
 import { CoveragePanel } from '@/chrome/CoveragePanel';
 import { DropZone } from '@/chrome/onboarding/DropZone';
 import { IngestedList } from '@/chrome/onboarding/IngestedList';
@@ -45,6 +46,7 @@ export function Onboarding() {
   const coverageByArea = useStore((s) => s.coverageByArea);
   const answerQuestion = useStore((s) => s.answerQuestion);
   const skipQuestion = useStore((s) => s.skipQuestion);
+  const link = useScenarioPath();
   const setStep = useStore((s) => s.setOnboardingStep);
   const markIngested = useStore((s) => s.markIngested);
 
@@ -105,7 +107,7 @@ export function Onboarding() {
         </div>
 
         {/* Persistent, and phrased as reassurance rather than escape (§5.3). */}
-        <Link to="/" className="font-medium text-ok text-sm hover:underline">
+        <Link to={link('/')} className="font-medium text-ok text-sm hover:underline">
           You can skip all of this — Sutradhar already works →
         </Link>
       </header>

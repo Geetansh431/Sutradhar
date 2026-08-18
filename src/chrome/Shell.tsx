@@ -7,6 +7,7 @@
  */
 
 import { Outlet, useNavigate } from 'react-router';
+import { useScenarioPath } from '@/lib/scenarioLink';
 import { AskBar } from '@/chrome/AskBar';
 import { PrototypeBadge } from '@/chrome/ModeSwitch';
 import { Rail } from '@/chrome/Rail';
@@ -31,6 +32,7 @@ export function Shell() {
   const unpin = useStore((s) => s.unpin);
   const setCurrentUser = useStore((s) => s.setCurrentUser);
   const navigate = useNavigate();
+  const link = useScenarioPath();
 
   const roleState = { entities, currentUserId };
   const person = currentPerson(roleState);
@@ -52,7 +54,7 @@ export function Shell() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between gap-4 border-line border-b bg-paper px-6 py-3">
-          <AskBar onPick={(question) => navigate(`/canvas/${question.id}`)} />
+          <AskBar onPick={(question) => navigate(link(`/canvas/${question.id}`))} />
 
           <div className="flex items-center gap-3">
             <RoleSwitcher

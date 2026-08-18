@@ -7,9 +7,12 @@
  */
 
 import { Link } from 'react-router';
+import { useScenarioPath } from '@/lib/scenarioLink';
 import type { TodayItem } from '@/domain/selectors/home';
 
 export function TodayPanel({ items }: { items: TodayItem[] }) {
+  const link = useScenarioPath();
+
   return (
     <section className="rounded-md border border-line bg-panel p-4">
       <h2 className="mb-3 font-medium text-ink text-xs uppercase tracking-wide">Today</h2>
@@ -28,7 +31,7 @@ export function TodayPanel({ items }: { items: TodayItem[] }) {
       )}
 
       <Link
-        to="/calendar"
+        to={link('/calendar')}
         className="mt-3 inline-block border-line border-t pt-3 text-brand text-sm hover:underline"
       >
         Open full calendar →

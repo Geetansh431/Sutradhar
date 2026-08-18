@@ -12,6 +12,7 @@
 
 import { useMemo, useState } from 'react';
 import { Navigate, useParams } from 'react-router';
+import { useScenarioPath } from '@/lib/scenarioLink';
 import { ChangePreview } from '@/blocks/ChangePreview';
 import { TaskTree } from '@/blocks/TaskTree';
 import { ModeSwitch } from '@/chrome/ModeSwitch';
@@ -140,6 +141,7 @@ export function ProjectWorkspace({ projectId, stateOverride }: ProjectWorkspaceP
  */
 export function ProjectWorkspaceRoute() {
   const { projectId } = useParams();
-  if (projectId === undefined) return <Navigate to="/projects" replace />;
+  const link = useScenarioPath();
+  if (projectId === undefined) return <Navigate to={link('/projects')} replace />;
   return <ProjectWorkspace projectId={projectId} />;
 }

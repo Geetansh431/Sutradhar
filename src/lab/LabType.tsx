@@ -47,7 +47,7 @@ function Specimen() {
       <div>
         <p className="mb-2 text-faint text-xs uppercase tracking-wide">Answer block</p>
         <div className="rounded-md border border-line bg-paper p-5">
-          <p className="tabular font-display text-4xl text-ink">{formatINR(rupees(642000))}</p>
+          <p className="tabular font-display text-4xl text-ink">{formatINR(rupees(662000))}</p>
           <p className="mt-1 text-mute text-sm">
             total open vendor exposure · 3 vendors · 2 projects
           </p>
@@ -146,7 +146,7 @@ function Specimen() {
           {(['text-xs', 'text-sm', 'text-base', 'text-lg', 'text-2xl', 'text-4xl'] as const).map(
             (size) => (
               <p key={size} className={`${size} tabular text-ink`}>
-                ₹18,40,000 · ₹6,42,000 · ₹80,000 · ₹1,70,000
+                ₹18,40,000 · ₹6,62,000 · ₹80,000 · ₹1,70,000
               </p>
             ),
           )}

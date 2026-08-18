@@ -4,15 +4,23 @@
 /* ─────────────────────────────────────────────────────────────
    SUTRADHAR THEME
    Palette lifted from the approved wireframes, converted to OKLCH.
-   Two font variables and nothing else — swapping the type pairing
-   is a one-line change. Decide it on /lab/type against real content.
+   The pairing is decided: Source Serif 4 for display, Inter for UI, both
+   self-hosted via @fontsource-variable. Swapping it is still a one-line
+   change — check any candidate on /lab/type against ₹18,40,000 first.
    ───────────────────────────────────────────────────────────── */
 
 :root {
   /* — type ————————————————————————————— */
-  --font-display: "Source Serif 4", Georgia, serif;
-  --font-ui: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  /* Both come from @fontsource-variable, imported in main.tsx — the app makes
+     no network request at all, so it renders identically with the wifi off.
+     The "… Variable" names are what those packages register; the plain names
+     follow for a machine that happens to have the static family installed. */
+  --font-display: "Source Serif 4 Variable", "Source Serif 4", Georgia, serif;
+  --font-ui: "Inter Variable", "Inter", system-ui, sans-serif;
+  /* No webfont: figures are Inter with tabular numerals (see `.tabular`), and
+     nothing in the product sets a mono family. This is the fallback chain a
+     future code or id display would get, not a font we ship. */
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
 
   /* — raw palette ——————————————————————— */
   --paper: oklch(1 0 90); /* #FFFFFF */

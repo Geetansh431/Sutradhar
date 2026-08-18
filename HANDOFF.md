@@ -121,6 +121,13 @@ route and watching it go red; a screenshot would never have caught it, because H
 than showing an empty Home. The redirect carries `?s=` through — dropping it silently reseeded
 the demo as `live` on refresh.
 
+**`App` seeds the store during render, not in an effect, and this is load-bearing.** The store's
+initial `onboarding.step` is `'seed'`, and `OnboardingGate` reads it on the *first* render — so
+seeding in a `useEffect` meant **`/?s=live` redirected to onboarding**, and `replace` made it
+stick. Opening the demo at its own default URL showed the 0:30 beat instead of the mid-demo firm.
+The gate's rule is exported as `belongsInOnboarding` and tested directly, because
+`renderToStaticMarkup` does not follow a `Navigate` and so a routing test cannot observe it.
+
 `App` is split into `App` (owns the `BrowserRouter`) and `AppRoutes` (the table alone), so the
 route test can mount the real thing inside a `MemoryRouter` rather than duplicating the list.
 That test passes no override, so it asserts on the screens' static headings rather than on data.
@@ -233,6 +240,19 @@ while w11 plainly draws Godrej's terms as "unknown". The shortfall reason moved 
 about. **A question's `area` decides which coverage bar opens it (§6.8), so it is a routing
 decision, not a label.**
 
+**Type is settled, and the app makes no network request.** Source Serif 4 for display, Inter for
+UI, both self-hosted via `@fontsource-variable` and imported in `main.tsx` — so the demo renders
+identically with the wifi off. `index.html` used to also pull DM Sans from Google Fonts, which
+nothing referenced; removed. `--font-mono` no longer names JetBrains Mono, which was never
+installed: figures are Inter with `font-variant-numeric: tabular-nums` (`.tabular`), and nothing
+in the product sets a mono family. Check any candidate on `/lab/type` against ₹18,40,000 — not
+every font carries ₹ well at small sizes.
+
+**Every link carries `?s=`.** `useScenarioPath()` in `src/lib/scenarioLink.ts` is the one place
+that happens; the rail, the pins, the ask bar, Home's pulse cards, Today, Projects → workspace
+and Onboarding's finish all use it. An unrecognised scenario is dropped rather than defaulted,
+so a bad `?s=` cannot pin itself into every subsequent URL.
+
 **One fixture conflict, resolved and documented** in `firm.ts`'s header: w09 puts Godrej's
 payment at ₹1,70,000 and builds the coverage gap on it; w11's exposure column says ₹1,50,000.
 **w09 wins** because the gap is load-bearing for the 4:00 beat — total exposure is ₹6,62,000.
@@ -321,16 +341,9 @@ five minutes — building editors nobody opens is the wrong trade at this stage.
 demonstrated. If a viewer asks "can I rename a stage?", there is nothing to show them. Worth
 building if that question comes up in a rehearsal.
 
-### 3. `/lab/type` font pairing
+### 3. Nothing else is outstanding
 
-Open since SETUP.md day 2. The specimen page exists; the decision doesn't. Two CSS variables.
-
-### 4. Rail links drop `?s=`
-
-Every rail link and the Projects → workspace link navigate without carrying the scenario query,
-so a refresh after clicking reseeds as `live`. Consistent across the whole app and harmless
-mid-demo (state resets on refresh anyway), but it is the same class of bug the onboarding
-redirect was fixed for. Worth one pass if the demo ever gets refreshed from a deep link.
+Everything else the earlier handoffs listed is closed.
 
 ---
 
