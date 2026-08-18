@@ -1,6 +1,6 @@
 # Sutradhar — build state and handoff
 
-**Last updated:** 18 August 2026 · at commit `7cddd9f`+ · 410 tests passing · working tree clean
+**Last updated:** 18 August 2026 · at commit `cc9243f` · 410 tests passing · working tree clean
 
 This document exists so a new session can continue without re-deriving context. It says what
 the thing is, what is built, what is not, and what to do next. `CLAUDE.md` holds the rules;
