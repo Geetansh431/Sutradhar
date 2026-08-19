@@ -15,7 +15,7 @@
  * goes through a preview like every other write (§8.2).
  */
 
-import type { DocumentView } from '@/domain/selectors/documents';
+import type { DocumentView, Passage } from '@/domain/selectors/documents';
 import { cn } from '@/lib/cn';
 import { type ChangeSet, proposeChangeSet } from '@/store/change';
 
@@ -58,6 +58,67 @@ function LoadingState() {
         <div key={row} className="h-5 animate-pulse rounded bg-fill-2" />
       ))}
     </output>
+  );
+}
+
+/**
+ * One line of a document.
+ *
+ * A sheet row is cells; everything else is a line of text. The compact variant
+ * stacks a row rather than scrolling it sideways — see `compact` on the props.
+ */
+function PassageBody({
+  passage,
+  columns,
+  highlighted,
+  compact,
+}: {
+  passage: Passage;
+  columns: string[] | null;
+  highlighted: boolean;
+  compact: boolean;
+}) {
+  const tone = highlighted ? 'font-medium text-ink' : 'text-mute';
+  const cellKey = (index: number) => `${passage.id}-${columns?.[index] ?? index}`;
+
+  if (!columns || !passage.cells) {
+    return (
+      <div className="text-[0.8125rem]">
+        {passage.label ? <span className="mr-2 text-faint text-xs">{passage.label}</span> : null}
+        <span className={tone}>{passage.text}</span>
+      </div>
+    );
+  }
+
+  if (compact) {
+    // Label above, cells wrapped beneath — the same row, read top-to-bottom
+    // instead of left-to-right. Empty cells are dropped rather than dashed:
+    // stacked, a column of em dashes is noise with no header to explain it.
+    return (
+      <div className="text-[0.8125rem]">
+        <span className="text-faint text-xs">{passage.label}</span>
+        <div className="flex flex-wrap gap-x-2">
+          {passage.cells.map((cell, index) =>
+            cell ? (
+              <span key={cellKey(index)} className={cn('tabular', tone)}>
+                {cell}
+              </span>
+            ) : null,
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex gap-3 text-[0.8125rem]">
+      <span className="w-16 shrink-0 text-faint text-xs">{passage.label}</span>
+      {passage.cells.map((cell, index) => (
+        <span key={cellKey(index)} className={cn('tabular flex-1 whitespace-nowrap', tone)}>
+          {cell || '—'}
+        </span>
+      ))}
+    </div>
   );
 }
 
@@ -134,69 +195,24 @@ export function DocumentViewer({
           ) : null}
 
           <ul>
-            {passages.map((passage) => {
-              const highlighted = passage.id === highlightId;
-              return (
-                <li
-                  key={passage.id}
-                  // The highlight is the whole point of the block, so it is the
-                  // loudest thing in it.
-                  className={cn(
-                    'border-line/60 border-b px-3 py-1.5 last:border-0',
-                    highlighted && 'border-brand/30 bg-brand-soft',
-                  )}
-                >
-                  {isSheet && passage.cells ? (
-                    compact ? (
-                      // Label above, cells wrapped beneath — the same row, read
-                      // top-to-bottom instead of left-to-right.
-                      <div className="text-[0.8125rem]">
-                        <span className="text-faint text-xs">{passage.label}</span>
-                        <div className="flex flex-wrap gap-x-2">
-                          {passage.cells.map((cell, index) =>
-                            cell ? (
-                              <span
-                                key={`${passage.id}-${columns[index] ?? index}`}
-                                className={cn(
-                                  'tabular',
-                                  highlighted ? 'font-medium text-ink' : 'text-mute',
-                                )}
-                              >
-                                {cell}
-                              </span>
-                            ) : null,
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex gap-3 text-[0.8125rem]">
-                        <span className="w-16 shrink-0 text-faint text-xs">{passage.label}</span>
-                        {passage.cells.map((cell, index) => (
-                          <span
-                            key={`${passage.id}-${columns[index] ?? index}`}
-                            className={cn(
-                              'tabular flex-1 whitespace-nowrap',
-                              highlighted ? 'font-medium text-ink' : 'text-mute',
-                            )}
-                          >
-                            {cell || '—'}
-                          </span>
-                        ))}
-                      </div>
-                    )
-                  ) : (
-                    <div className="text-[0.8125rem]">
-                      {passage.label ? (
-                        <span className="mr-2 text-faint text-xs">{passage.label}</span>
-                      ) : null}
-                      <span className={highlighted ? 'font-medium text-ink' : 'text-mute'}>
-                        {passage.text}
-                      </span>
-                    </div>
-                  )}
-                </li>
-              );
-            })}
+            {passages.map((passage) => (
+              <li
+                key={passage.id}
+                // The highlight is the whole point of the block, so it is the
+                // loudest thing in it.
+                className={cn(
+                  'border-line/60 border-b px-3 py-1.5 last:border-0',
+                  passage.id === highlightId && 'border-brand/30 bg-brand-soft',
+                )}
+              >
+                <PassageBody
+                  passage={passage}
+                  columns={columns}
+                  highlighted={passage.id === highlightId}
+                  compact={compact}
+                />
+              </li>
+            ))}
           </ul>
         </div>
       )}

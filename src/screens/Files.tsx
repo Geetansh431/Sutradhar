@@ -150,7 +150,13 @@ export function Files({ stateOverride }: FilesProps = {}) {
       )}
 
       {open ? (
-        <section className="rounded-lg border border-brand p-4">
+        <section
+          // The folder list is long, so the viewer can open below the fold and
+          // read as nothing having happened. Bringing it into view is what makes
+          // the click legible.
+          ref={(node) => node?.scrollIntoView({ block: 'nearest' })}
+          className="rounded-lg border border-brand p-4"
+        >
           <DocumentViewer view={open} />
           <button
             type="button"
