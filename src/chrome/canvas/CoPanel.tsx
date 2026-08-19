@@ -89,6 +89,52 @@ const blockKey = (block: BlockRef): string => {
   return block.block;
 };
 
+/**
+ * A project as a record card — value, what has gone out, and the margin.
+ *
+ * Only projects: another entity kind would want its own field list, and a
+ * generic one would show the wrong things for all of them.
+ */
+function ProjectCard({ entityId, entities }: { entityId: string; entities: EntityTable }) {
+  const entity = entities[entityId];
+  if (entity?.kind !== 'project') {
+    return (
+      <p className="py-6 text-center text-faint text-sm">
+        No card for “{entityId}” in this scenario.
+      </p>
+    );
+  }
+
+  const money = projectMoneyFor({ entities }, entity.id);
+  const fields = [
+    fieldRow('value', 'Contract value', entity.value, formatINR),
+    ...(money
+      ? [
+          plainRow('spent', 'Paid out', formatINR(money.spent.value)),
+          plainRow('committed', 'Ordered, not yet paid', formatINR(money.committed.value)),
+          plainRow(
+            'margin',
+            'Margin now',
+            `${formatINR(money.margin)} · ${((money.marginPct ?? 0) * 100).toFixed(1)}%`,
+          ),
+          // The leak, stated beside the margin rather than inside it —
+          // rule 3 keeps an unconfirmed estimate out of every total.
+          ...(money.atRisk > 0
+            ? [
+                plainRow(
+                  'at-risk',
+                  'Unpriced, at risk',
+                  `${formatINR(money.atRisk)} · ${((money.marginPctIfPriced ?? 0) * 100).toFixed(1)}% if it holds`,
+                ),
+              ]
+            : []),
+        ]
+      : []),
+  ];
+
+  return <RecordCard title={entity.name} subtitle="Margin" fields={fields} entityId={entity.id} />;
+}
+
 /** Renders one block of a plan. The plan names the type; this maps it. */
 function PlannedBlock({
   block,
@@ -156,49 +202,8 @@ function PlannedBlock({
       );
     }
 
-    case 'record-card': {
-      // Only projects so far — the one entity a plan currently opens a card on.
-      // Another kind would want its own field list, not a generic one.
-      const entity = entities[block.entity.id];
-      if (!entity || entity.kind !== 'project') {
-        return (
-          <p className="py-6 text-center text-faint text-sm">
-            No card for “{block.entity.id}” in this scenario.
-          </p>
-        );
-      }
-
-      const money = projectMoneyFor({ entities }, entity.id);
-      const fields = [
-        fieldRow('value', 'Contract value', entity.value, formatINR),
-        ...(money
-          ? [
-              plainRow('spent', 'Paid out', formatINR(money.spent.value)),
-              plainRow('committed', 'Ordered, not yet paid', formatINR(money.committed.value)),
-              plainRow(
-                'margin',
-                'Margin now',
-                `${formatINR(money.margin)} · ${((money.marginPct ?? 0) * 100).toFixed(1)}%`,
-              ),
-              // The leak, stated beside the margin rather than inside it —
-              // rule 3 keeps an unconfirmed estimate out of every total.
-              ...(money.atRisk > 0
-                ? [
-                    plainRow(
-                      'at-risk',
-                      'Unpriced, at risk',
-                      `${formatINR(money.atRisk)} · ${((money.marginPctIfPriced ?? 0) * 100).toFixed(1)}% if it holds`,
-                    ),
-                  ]
-                : []),
-            ]
-          : []),
-      ];
-
-      return (
-        <RecordCard title={entity.name} subtitle="Margin" fields={fields} entityId={entity.id} />
-      );
-    }
+    case 'record-card':
+      return <ProjectCard entityId={block.entity.id} entities={entities} />;
 
     case 'report':
       // Read-only here: the Canvas is answering one question, and changing the

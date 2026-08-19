@@ -71,23 +71,96 @@ export type ResolvedAnswer = {
   followUps: string[];
 };
 
+function resolveVendorExposure(state: ResolverState, ref: MetricRef): ResolvedMetric {
+  const view = vendorExposure(state);
+  const scoped = ref.scope
+    ? view.vendors.filter((vendor) => vendor.id === ref.scope?.id)
+    : view.vendors;
+  const value = scoped.reduce((acc, vendor) => addPaise(acc, vendor.open), ZERO);
+  const unconfirmed = scoped.filter((vendor) => vendor.openUnconfirmed);
+  return {
+    value: money(value),
+    display: formatINR(value),
+    hasUnconfirmed: unconfirmed.length > 0,
+    unconfirmedLabels: unconfirmed.map((vendor) => vendor.name),
+  };
+}
+
+function resolveDaysBehind(state: ResolverState, ref: MetricRef): ResolvedMetric {
+  // Scope names the project; without one there is no schedule to read.
+  const view = ref.scope ? scheduleView(state, ref.scope.id) : null;
+  const days = view?.daysBehind ?? null;
+
+  // The headline states the slip, so it is the slip's provenance that has to
+  // be caveated — not the deadlines sitting next to it (§7.2). A slip
+  // inherited from a parent task is inferred, and the answer says which.
+  const inferred = (view?.chain ?? []).filter((task) => task.slippedDays?.state === 'inferred');
+
+  return {
+    value: { unit: 'days', count: days ?? 0 },
+    // "not" rather than "0 days": nothing recorded as slipping is a
+    // different statement from a measured zero, and reads as one.
+    display: days === null ? 'not' : `${days} ${days === 1 ? 'day' : 'days'}`,
+    hasUnconfirmed: inferred.length > 0,
+    unconfirmedLabels: inferred.map((task) => task.title),
+  };
+}
+
+function resolvePeriodInOut(state: ResolverState, ref: MetricRef): ResolvedMetric {
+  // The net for a period. Without a period there is nothing to sum over,
+  // so the metric declines rather than defaulting to a window nobody asked
+  // for — a total whose bounds are guessed is worse than no total.
+  if (!ref.period) {
+    return {
+      value: money(ZERO),
+      display: '—',
+      hasUnconfirmed: false,
+      unconfirmedLabels: [],
+    };
+  }
+
+  // `buildReport`, not `runReport`: the Canvas gates on `canSeeMoney`
+  // before it resolves anything, so the cut is already made upstream.
+  const report = buildReport({ entities: state.entities }, 'project-pnl', {
+    period: ref.period,
+  });
+  const net = report.total?.value ?? ZERO;
+  const excluded = report.total?.excludedCount ?? 0;
+
+  return {
+    value: money(net),
+    display: formatINR(net),
+    hasUnconfirmed: excluded > 0,
+    unconfirmedLabels: excluded > 0 ? [`${excluded} in this period`] : [],
+  };
+}
+
+function resolveProjectMargin(state: ResolverState, ref: MetricRef): ResolvedMetric {
+  // Scope names the project; without one there is nothing to compute.
+  // `projectMoneyFor`, not `workspace`: the Canvas gates on `canSeeMoney`
+  // before it resolves anything, so the cut is already made upstream.
+  const projectMoney = ref.scope
+    ? projectMoneyFor({ entities: state.entities }, ref.scope.id)
+    : null;
+
+  if (!projectMoney || projectMoney.marginPct === null) {
+    return { value: money(ZERO), display: '—', hasUnconfirmed: false, unconfirmedLabels: [] };
+  }
+
+  return {
+    value: { unit: 'percent', ratio: projectMoney.marginPct },
+    display: `${(projectMoney.marginPct * 100).toFixed(1)}%`,
+    // The margin is built from confirmed figures only. What is unconfirmed
+    // is the estimate sitting beside it, and the caveat names that.
+    hasUnconfirmed: projectMoney.restsOnUnconfirmed,
+    unconfirmedLabels: projectMoney.restsOnUnconfirmed ? ['a figure this margin rests on'] : [],
+  };
+}
+
 function resolveMetric(state: ResolverState, ref: MetricRef): ResolvedMetric {
   switch (ref.metric) {
-    case 'open-vendor-exposure': {
-      const view = vendorExposure(state);
-      const scoped = ref.scope
-        ? view.vendors.filter((vendor) => vendor.id === ref.scope?.id)
-        : view.vendors;
-      const value = scoped.reduce((acc, vendor) => addPaise(acc, vendor.open), ZERO);
-      const unconfirmed = scoped.filter((vendor) => vendor.openUnconfirmed);
-      return {
-        value: money(value),
-        display: formatINR(value),
-        hasUnconfirmed: unconfirmed.length > 0,
-        unconfirmedLabels: unconfirmed.map((vendor) => vendor.name),
-      };
-    }
-
+    case 'open-vendor-exposure':
+      return resolveVendorExposure(state, ref);
     case 'coverage-gap': {
       const gaps = moneyWindow(state).gaps;
       const value = gaps.reduce((acc, gap) => addPaise(acc, gap.shortfall), ZERO);
@@ -99,77 +172,12 @@ function resolveMetric(state: ResolverState, ref: MetricRef): ResolvedMetric {
       };
     }
 
-    case 'days-behind-schedule': {
-      // Scope names the project; without one there is no schedule to read.
-      const view = ref.scope ? scheduleView(state, ref.scope.id) : null;
-      const days = view?.daysBehind ?? null;
-
-      // The headline states the slip, so it is the slip's provenance that has to
-      // be caveated — not the deadlines sitting next to it (§7.2). A slip
-      // inherited from a parent task is inferred, and the answer says which.
-      const inferred = (view?.chain ?? []).filter((task) => task.slippedDays?.state === 'inferred');
-
-      return {
-        value: { unit: 'days', count: days ?? 0 },
-        // "not" rather than "0 days": nothing recorded as slipping is a
-        // different statement from a measured zero, and reads as one.
-        display: days === null ? 'not' : `${days} ${days === 1 ? 'day' : 'days'}`,
-        hasUnconfirmed: inferred.length > 0,
-        unconfirmedLabels: inferred.map((task) => task.title),
-      };
-    }
-
-    case 'period-in-out': {
-      // The net for a period. Without a period there is nothing to sum over,
-      // so the metric declines rather than defaulting to a window nobody asked
-      // for — a total whose bounds are guessed is worse than no total.
-      if (!ref.period) {
-        return {
-          value: money(ZERO),
-          display: '—',
-          hasUnconfirmed: false,
-          unconfirmedLabels: [],
-        };
-      }
-
-      // `buildReport`, not `runReport`: the Canvas gates on `canSeeMoney`
-      // before it resolves anything, so the cut is already made upstream.
-      const report = buildReport({ entities: state.entities }, 'project-pnl', {
-        period: ref.period,
-      });
-      const net = report.total?.value ?? ZERO;
-      const excluded = report.total?.excludedCount ?? 0;
-
-      return {
-        value: money(net),
-        display: formatINR(net),
-        hasUnconfirmed: excluded > 0,
-        unconfirmedLabels: excluded > 0 ? [`${excluded} in this period`] : [],
-      };
-    }
-
-    case 'project-margin': {
-      // Scope names the project; without one there is nothing to compute.
-      // `projectMoneyFor`, not `workspace`: the Canvas gates on `canSeeMoney`
-      // before it resolves anything, so the cut is already made upstream.
-      const projectMoney = ref.scope
-        ? projectMoneyFor({ entities: state.entities }, ref.scope.id)
-        : null;
-
-      if (!projectMoney || projectMoney.marginPct === null) {
-        return { value: money(ZERO), display: '—', hasUnconfirmed: false, unconfirmedLabels: [] };
-      }
-
-      return {
-        value: { unit: 'percent', ratio: projectMoney.marginPct },
-        display: `${(projectMoney.marginPct * 100).toFixed(1)}%`,
-        // The margin is built from confirmed figures only. What is unconfirmed
-        // is the estimate sitting beside it, and the caveat names that.
-        hasUnconfirmed: projectMoney.restsOnUnconfirmed,
-        unconfirmedLabels: projectMoney.restsOnUnconfirmed ? ['a figure this margin rests on'] : [],
-      };
-    }
-
+    case 'days-behind-schedule':
+      return resolveDaysBehind(state, ref);
+    case 'period-in-out':
+      return resolvePeriodInOut(state, ref);
+    case 'project-margin':
+      return resolveProjectMargin(state, ref);
     case 'collectible-this-week':
     case 'payable-next-14-days': {
       // Planned for, not yet resolved. Returning zero would be a fabricated
