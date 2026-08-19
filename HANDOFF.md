@@ -1,6 +1,6 @@
 # Sutradhar — build state and handoff
 
-**Last updated:** 18 August 2026 · at commit `cc9243f` · 410 tests passing · working tree clean
+**Last updated:** 19 August 2026 · at commit `b1782e5`+ · 434 tests passing · working tree clean
 
 This document exists so a new session can continue without re-deriving context. It says what
 the thing is, what is built, what is not, and what to do next. `CLAUDE.md` holds the rules;
@@ -134,7 +134,7 @@ That test passes no override, so it asserts on the screens' static headings rath
 
 ---
 
-## Built — blocks (9 of 10)
+## Built — blocks (10 of 10)
 
 The vocabulary is closed at ten (`CLAUDE.md` rule 7). Each built block appears in `/lab` in all
 seven states: loading, empty, populated, one unconfirmed field, one conflicting field, one
@@ -146,20 +146,27 @@ missing field, role-restricted.
 | 02 | Data grid | `src/blocks/DataGrid.tsx` | Generic over `TRow`; owns `FieldCell`, the single place a stored figure becomes text — so provenance and `.fv-*` come for free everywhere |
 | 03 | Money timeline | `src/blocks/MoneyTimeline.tsx` | Continuous axis, IN/OUT gutter, dash-bounded gap band. Compact variant drops the date axis (labels overlapped at 34px) |
 | 04 | Ledger | `src/blocks/Ledger.tsx` | Mark-paid emits a `settle` op and is **not offered** on an unconfirmed amount — a guess cannot be settled |
+| 05 | Document viewer | `src/blocks/DocumentViewer.tsx` | Four content shapes — sheet, pages, thread, image — because the firm's sources really are four things. Read-only by design: the file is evidence, and what gets corrected is *our reading* of it. `compact` stacks sheet rows for the 16rem evidence column |
 | 06 | Report | `src/blocks/Report.tsx` | Four fixed templates, parameters only. `buildReport` skips the role check for callers that already made it; `runReport` applies it |
 | 07 | Chart | `src/blocks/Chart.tsx` | `'bar' \| 'hbar' \| 'timeline' \| 'stacked'` as a closed union |
 | 08 | Task tree | `src/blocks/TaskTree.tsx` | Nests to any depth, drag to re-parent, `treeitem` roles with a roving tabindex. `highlightIds` lets the Canvas show which rows an answer is about |
 | 09 | Change preview | `src/blocks/ChangePreview.tsx` | `changeTag` derives NEW/EDIT/LINK/ARCHIVE from the op, so DELETE is unrepresentable. ⌘↵ confirms |
 | 10 | Gap | `src/blocks/Gap.tsx` | Scoped by area or entity — "what is missing *here*". Answers inline via a preview, unlike the onboarding interview which writes directly |
 
-### Not built (1)
+**The vocabulary is closed and complete.** `/lab` reads "10 of 10 blocks built" off
+`BLOCKS.length`, so the counter cannot drift. Rule 7 now bites for real: anything that does not
+fit these ten is a conversation, not a new file.
 
-| # | Block | Blocks what |
-|---|---|---|
-| 05 | Document viewer | The source with its passage highlighted. Wanted for its own sake — Files now lists documents but nothing opens one |
+Block 05 has three homes, all wired: the **evidence zone** (a card opens the source it names),
+**Files** (selecting a row opens it), and a provenance click. The evidence column's own promise —
+"every figure links back to a source" — was false until the cards became openable.
 
-`/lab` renders unbuilt blocks as explicit "not built" tiles rather than omitting them, and the
-header reads "9 of 10 blocks built" off `BLOCKS.length` — so the counter cannot drift.
+**`Document.content` is a discriminated union** (`DocumentContent` in `domain/types.ts`), and
+`SourceRef.locator` addresses a line *within* it by id equality — 'row 118', 'p.2 clause 4',
+'msg 214'. Fixture row ids are therefore load-bearing: change one without changing the locator
+that cites it and the highlight silently stops landing. `documentView()` reports an unplaceable
+locator as `unresolvedLocator` rather than just not highlighting, because a missing highlight and
+a document with no relevant passage look identical and mean opposite things.
 
 ---
 
@@ -317,15 +324,11 @@ Ordered by what it buys the demo. **Everything the two previous handoffs listed 
 block 08, the project workspace, `kormangala-handover`, all three dead rail links, block 06 and
 `july-across-projects`. The margin question is settled: 37.0%, recorded above, do not re-open.
 
-### 1. Block 05 — document viewer
+### 1. `iyer-margin` — a decision, not a block
 
-The last of the ten. It unlocks no question: `sharma-bill-capture` takes the capture path by
-design. It is wanted for its own sake — "the source, passage highlighted" is the visible proof
-behind provenance, and nothing on screen shows a source document at all. Files sharpens the
-case, since it lists every document and admits plainly that opening one needs a viewer.
-
-`iyer-margin` is the only question still without a plan, and it wants no block — just a decision
-about what a margin answer should say now that the figure is settled at 37.0%.
+The only canned question still without a plan, and it wants no block. What it needs is a decision
+about what a margin answer should *say* now the figure is settled at 37.0% — in particular
+whether it leads with margin now, or with the change order that is quietly eating it.
 
 ### 2. Settings is thinner than §6.9
 

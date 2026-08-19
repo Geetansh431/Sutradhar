@@ -10,6 +10,7 @@
 import { ChangePreview, ChangePreviewLoading } from '@/blocks/ChangePreview';
 import { Chart, ChartLoading, moneyDatum } from '@/blocks/Chart';
 import { DataGrid, DataGridLoading } from '@/blocks/DataGrid';
+import { DocumentViewer, DocumentViewerLoading } from '@/blocks/DocumentViewer';
 import { Gap, GapLoading } from '@/blocks/Gap';
 import { Ledger, LedgerLoading } from '@/blocks/Ledger';
 import { MoneyTimeline, MoneyTimelineLoading } from '@/blocks/MoneyTimeline';
@@ -17,6 +18,7 @@ import { paymentColumns, uncoveredIds } from '@/blocks/paymentColumns';
 import { fieldRow, plainRow, RecordCard, RecordCardLoading } from '@/blocks/RecordCard';
 import { Report, ReportLoading } from '@/blocks/Report';
 import { TaskTree, TaskTreeLoading } from '@/blocks/TaskTree';
+import { documentView } from '@/domain/selectors/documents';
 import { allGaps, gapsForEntity, gapsInArea } from '@/domain/selectors/gaps';
 import { type MoneyState, moneyWindow } from '@/domain/selectors/money';
 import { ledgerFor } from '@/domain/selectors/people';
@@ -1153,6 +1155,73 @@ export const GAP_CASES: LabCase[] = [
   },
 ];
 
+/**
+ * Block 05's cases.
+ *
+ * A document has no `FieldValue` of its own, so the three field states are
+ * shown as the three ways a *reading* of one can stand: a figure traced to an
+ * exact row, a figure read off a photograph and therefore never confirmed, and
+ * a citation pointing at a line the file does not contain.
+ */
+const DOCS = { documents: buildState('live').documents };
+
+export const DOCUMENT_VIEWER_CASES: LabCase[] = [
+  {
+    block: '05-document-viewer',
+    state: 'loading',
+    note: 'title, then lines',
+    render: () => <DocumentViewerLoading />,
+  },
+  {
+    block: '05-document-viewer',
+    state: 'empty',
+    note: 'a file we hold but cannot quote — on the shelf, not readable',
+    render: () => <DocumentViewer view={documentView(DOCS, 'doc-agreements')} />,
+  },
+  {
+    block: '05-document-viewer',
+    state: 'populated',
+    note: "the sheet behind the demo's money, opened at Iyer's instalment (row 118)",
+    render: () => <DocumentViewer view={documentView(DOCS, 'doc-payments-master', 'row 118')} />,
+  },
+  {
+    block: '05-document-viewer',
+    state: 'unconfirmed',
+    note: 'the photographed bill behind every dotted figure — a reading, not a quotation',
+    render: () => (
+      <DocumentViewer
+        view={documentView(DOCS, 'doc-vendor-bills', 'transcribed')}
+        correcting={{
+          entityId: 'payment-kumar-earlier',
+          field: 'amount',
+          current: '₹1,02,000',
+        }}
+        onPropose={() => {}}
+      />
+    ),
+  },
+  {
+    block: '05-document-viewer',
+    state: 'conflicting',
+    note: 'the figure cites a line this file does not contain — said, not swallowed',
+    render: () => <DocumentViewer view={documentView(DOCS, 'doc-payments-master', 'row 9999')} />,
+  },
+  {
+    block: '05-document-viewer',
+    state: 'missing',
+    note: 'unreadable (§5.2) — nothing was extracted, so nothing rests on it',
+    render: () => <DocumentViewer view={documentView(DOCS, 'doc-img-2231')} />,
+  },
+  {
+    block: '05-document-viewer',
+    state: 'restricted',
+    note: 'Team — a contract is not theirs to open',
+    render: () => (
+      <DocumentViewer view={documentView(DOCS, 'doc-iyer-contract', 'p.2 clause 4')} restricted />
+    ),
+  },
+];
+
 export const ALL_CASES: LabCase[] = [
   ...MONEY_TIMELINE_CASES,
   ...DATA_GRID_CASES,
@@ -1163,4 +1232,5 @@ export const ALL_CASES: LabCase[] = [
   ...TASK_TREE_CASES,
   ...REPORT_CASES,
   ...GAP_CASES,
+  ...DOCUMENT_VIEWER_CASES,
 ];

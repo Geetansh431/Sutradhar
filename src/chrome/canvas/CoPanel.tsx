@@ -11,9 +11,11 @@
  * zone components take content but not placement.
  */
 
+import { useState } from 'react';
 import { ChangePreview } from '@/blocks/ChangePreview';
 import { Chart } from '@/blocks/Chart';
 import { DataGrid, FieldCell, type GridColumn } from '@/blocks/DataGrid';
+import { DocumentViewer } from '@/blocks/DocumentViewer';
 import { Gap } from '@/blocks/Gap';
 import { MoneyTimeline } from '@/blocks/MoneyTimeline';
 import { paymentColumns, uncoveredIds } from '@/blocks/paymentColumns';
@@ -21,12 +23,14 @@ import { Report } from '@/blocks/Report';
 import { TaskTree } from '@/blocks/TaskTree';
 import type { BlockRef } from '@/canvas/plan';
 import type { EvidenceCard, ResolvedAnswer } from '@/canvas/resolver';
+import { documentView } from '@/domain/selectors/documents';
 import { type GapsState, gapsInArea, isCoverageArea } from '@/domain/selectors/gaps';
 import { moneyWindow } from '@/domain/selectors/money';
 import { buildReport } from '@/domain/selectors/report';
 import { taskTree } from '@/domain/selectors/tasks';
 import type { VendorExposure } from '@/domain/selectors/vendors';
 import { exposureShares, vendorExposure } from '@/domain/selectors/vendors';
+import type { Document } from '@/domain/types';
 import { cn } from '@/lib/cn';
 import { formatINR } from '@/lib/money';
 import type { ChangeSet } from '@/store/change';
@@ -200,25 +204,66 @@ function PlannedBlock({
   }
 }
 
-function EvidenceColumn({ cards }: { cards: EvidenceCard[] }) {
+/**
+ * The evidence zone — §7.3, and block 05's home (§8.1).
+ *
+ * "Every figure links back to a source" is a claim the column makes about
+ * itself, so a card that cannot be opened makes the claim false. Selecting one
+ * opens it in the viewer, at the passage if the figure named one.
+ */
+function EvidenceColumn({
+  cards,
+  documents,
+  openId,
+  onOpen,
+}: {
+  cards: EvidenceCard[];
+  documents: Document[];
+  openId: string | null;
+  onOpen: (id: string | null) => void;
+}) {
+  const open = openId ? documentView({ documents }, openId) : null;
+
   return (
     <aside className="rounded-md border border-line bg-panel p-3">
       <h3 className="mb-2 font-medium text-faint text-xs uppercase tracking-wide">Evidence</h3>
       <ul className="space-y-2">
-        {cards.map((card) => (
-          <li
-            key={card.id}
-            className={cn(
-              'rounded-md border px-3 py-2',
-              card.unreadable ? 'border-warn/50 bg-warn-soft/30' : 'border-line bg-paper',
-            )}
-          >
-            <p className="truncate font-medium text-ink text-sm">{card.label}</p>
-            <p className="text-faint text-xs">{card.detail}</p>
-          </li>
-        ))}
+        {cards.map((card) => {
+          // A human answer is a source too, but there is no file to open.
+          const openable = documents.some((document) => document.id === card.id);
+          const selected = card.id === openId;
+
+          return (
+            <li key={card.id}>
+              <button
+                type="button"
+                disabled={!openable}
+                onClick={() => onOpen(selected ? null : card.id)}
+                className={cn(
+                  'w-full rounded-md border px-3 py-2 text-left',
+                  card.unreadable ? 'border-warn/50 bg-warn-soft/30' : 'border-line bg-paper',
+                  selected && 'border-brand ring-1 ring-brand/30',
+                  openable ? 'cursor-pointer hover:border-brand' : 'cursor-default',
+                )}
+              >
+                <p className="truncate font-medium text-ink text-sm">{card.label}</p>
+                <p className="text-faint text-xs">
+                  {card.detail}
+                  {openable ? (selected ? ' · close' : ' · open') : ''}
+                </p>
+              </button>
+            </li>
+          );
+        })}
       </ul>
-      <p className="mt-3 text-brand text-xs">Every figure links back to a source.</p>
+
+      {open ? (
+        <div className="mt-3 border-line border-t pt-3">
+          <DocumentViewer view={open} compact />
+        </div>
+      ) : (
+        <p className="mt-3 text-brand text-xs">Every figure links back to a source.</p>
+      )}
     </aside>
   );
 }
@@ -226,6 +271,7 @@ function EvidenceColumn({ cards }: { cards: EvidenceCard[] }) {
 export function CoPanel({
   answer,
   entities,
+  documents,
   gapState,
   pending,
   pinned,
@@ -236,6 +282,8 @@ export function CoPanel({
 }: {
   answer: ResolvedAnswer;
   entities: EntityTable;
+  /** The firm's files, so an evidence card can be opened (block 05). */
+  documents: Document[];
   /** Coverage and interview history, for the gap block. */
   gapState: Omit<GapsState, 'entities'>;
   pending: ChangeSet | null;
@@ -245,6 +293,10 @@ export function CoPanel({
   onDiscard: () => void;
   onPin: () => void;
 }) {
+  // Which source is open in the evidence column. Local because it is a way of
+  // looking at the answer, not a change to it.
+  const [openSourceId, setOpenSourceId] = useState<string | null>(null);
+
   return (
     <section className="rounded-md border border-brand">
       <header className="flex flex-wrap items-baseline justify-between gap-2 bg-brand-soft px-4 py-3">
@@ -288,7 +340,12 @@ export function CoPanel({
         </div>
 
         {/* EVIDENCE — right column, full height. */}
-        <EvidenceColumn cards={answer.evidence} />
+        <EvidenceColumn
+          cards={answer.evidence}
+          documents={documents}
+          openId={openSourceId}
+          onOpen={setOpenSourceId}
+        />
       </div>
 
       {pending ? (

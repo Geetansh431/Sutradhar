@@ -162,6 +162,46 @@ export type Task = {
   archivedAt: string | null;
 };
 
+/**
+ * A document's renderable content — spec §8.1, block 05.
+ *
+ * Four shapes because the firm's sources really are four things, and a viewer
+ * that rendered every one as a page of text would be a worse lie than showing
+ * nothing: the ₹2,12,000 the demo shows dotted came off a *photograph* of a
+ * handwritten bill, and that is the fact the viewer has to make visible.
+ *
+ * `locator` on a `SourceRef` addresses a line within these — a sheet row, a
+ * clause, a message id — which is what "the relevant passage highlighted"
+ * means in practice.
+ */
+export type DocumentContent =
+  | {
+      /** A spreadsheet. Locators read "row 4". */
+      shape: 'sheet';
+      columns: string[];
+      rows: { id: string; cells: string[] }[];
+    }
+  | {
+      /** A PDF or a letter. Locators read "p.2 clause 4". */
+      shape: 'pages';
+      pages: { id: string; label: string; lines: { id: string; text: string }[] }[];
+    }
+  | {
+      /** A chat export. Locators read "msg 214". */
+      shape: 'thread';
+      messages: { id: string; author: string; at: string; text: string }[];
+    }
+  | {
+      /**
+       * A photograph. Locators name the file. There is nothing to quote — which
+       * is exactly why a figure read off one is never confirmed by itself.
+       */
+      shape: 'image';
+      caption: string;
+      /** What the extractor believed it read, if anything. */
+      transcribed: string | null;
+    };
+
 export type Document = {
   id: EntityId;
   kind: 'document';
@@ -184,6 +224,11 @@ export type Document = {
    */
   version: string | null;
   supersedesId: EntityId | null;
+  /**
+   * What block 05 renders. Null for a document we hold a name for but no
+   * content — the folder listing knows it exists, the viewer cannot show it.
+   */
+  content: DocumentContent | null;
   archivedAt: string | null;
 };
 

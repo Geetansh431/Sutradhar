@@ -110,6 +110,7 @@ export function Canvas({ stateOverride, questionId: questionProp }: CanvasProps 
       <CoPanel
         answer={answer}
         entities={entities}
+        documents={documents}
         gapState={gapState}
         pending={pending}
         pinned={pinned}

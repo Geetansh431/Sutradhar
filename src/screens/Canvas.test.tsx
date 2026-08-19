@@ -217,6 +217,15 @@ describe('when the Canvas cannot answer — §7.7', () => {
     expect(html).not.toContain('is not built yet');
   });
 
+  it("makes the evidence column's own claim true — a source can be opened", () => {
+    // "Every figure links back to a source" is a claim the column makes about
+    // itself. Before block 05 the cards were inert, which made it false.
+    const html = render('vendor-exposure');
+    expect(html).toContain('Payments_Master.xlsx');
+    // The openable cards are buttons; the human answer is not.
+    expect(html).toMatch(/<button[^>]*>(?:(?!<\/button>).)*Payments_Master\.xlsx/s);
+  });
+
   it('an unknown question offers what can be asked instead', () => {
     const html = render('what-is-the-weather');
     expect(text(html)).toContain('Nothing canned matches that');

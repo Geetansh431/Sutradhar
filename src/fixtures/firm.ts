@@ -1165,6 +1165,24 @@ const documents: Document[] = [
     folder: 'Firm/Finance',
     version: null,
     supersedesId: null,
+    // Rows are addressed by the locators used across the fixtures — 'row 4',
+    // 'row 9', 'row 41', 'row 118' — so a provenance click lands on the line.
+    content: {
+      shape: 'sheet',
+      columns: ['Date', 'Party', 'Project', 'In', 'Out', 'Status'],
+      rows: [
+        {
+          id: 'row 4',
+          cells: ['12 Jul', 'Kumar Carpentry', 'Kormangala', '', '1,40,000', 'paid'],
+        },
+        { id: 'row 9', cells: ['22 Jul', 'Godrej dealer', 'Iyer', '', '95,000', 'paid'] },
+        { id: 'row 41', cells: ['08 Jul', 'R. Iyer', 'Iyer', '4,50,000', '', 'cleared'] },
+        {
+          id: 'row 118',
+          cells: ['12 Aug', 'R. Iyer', 'Iyer', '2,50,000', '', 'due today'],
+        },
+      ],
+    },
     archivedAt: null,
   },
   {
@@ -1178,6 +1196,20 @@ const documents: Document[] = [
     folder: 'Iyer Residence/Quotations',
     version: 'v3',
     supersedesId: 'doc-iyer-quotation-v2',
+    content: {
+      shape: 'pages',
+      pages: [
+        {
+          id: 'p.1',
+          label: 'Page 1',
+          lines: [
+            { id: 'title', text: 'Iyer Residence — 4BHK, Whitefield' },
+            { id: '22 line items', text: 'Contract value: ₹18,40,000 across 22 line items' },
+            { id: 'instalment 3', text: 'Instalment 3: ₹2,50,000, due on commencement of ceiling' },
+          ],
+        },
+      ],
+    },
     archivedAt: null,
   },
   {
@@ -1191,6 +1223,22 @@ const documents: Document[] = [
     folder: 'Iyer Residence/Contract',
     version: null,
     supersedesId: null,
+    content: {
+      shape: 'pages',
+      pages: [
+        {
+          id: 'p.2',
+          label: 'Page 2',
+          lines: [
+            { id: 'clause 3', text: 'Clause 3. Payment falls due 7 days from invoice.' },
+            {
+              id: 'p.2 clause 4',
+              text: 'Clause 4. Handover on 28 September 2026, subject to client approvals.',
+            },
+          ],
+        },
+      ],
+    },
     archivedAt: null,
   },
   {
@@ -1204,6 +1252,23 @@ const documents: Document[] = [
     folder: 'Kormangala/Correspondence',
     version: null,
     supersedesId: null,
+    content: {
+      shape: 'thread',
+      messages: [
+        {
+          id: 'msg 88',
+          author: 'Kormangala flat owner',
+          at: '2 Jul, 19:12',
+          text: 'Reachable on kormangala.owner@gmail.com — easier than calls this month.',
+        },
+        {
+          id: 'msg 214',
+          author: 'Ravi',
+          at: '9 Aug, 08:10',
+          text: 'Ceiling boards delayed again. We are about four days behind the plan since Saturday.',
+        },
+      ],
+    },
     archivedAt: null,
   },
   {
@@ -1217,6 +1282,14 @@ const documents: Document[] = [
     folder: 'Firm/Vendor bills',
     version: null,
     supersedesId: null,
+    // The source behind every dotted figure in the demo. There is nothing to
+    // quote from a photograph of a handwritten bill, which is the whole reason
+    // a figure read off one is never confirmed by itself (§5.5).
+    content: {
+      shape: 'image',
+      caption: '14 photographs of handwritten vendor bills, taken on site',
+      transcribed: '₹2,12,000 — read from IMG_2251.jpg, handwriting unclear on the last digit',
+    },
     archivedAt: null,
   },
   {
@@ -1231,6 +1304,11 @@ const documents: Document[] = [
     folder: 'Iyer Residence/Site photos',
     version: null,
     supersedesId: null,
+    content: {
+      shape: 'image',
+      caption: 'Photograph of a handwritten bill, taken at an angle in poor light',
+      transcribed: null,
+    },
     archivedAt: null,
   },
   {
@@ -1244,6 +1322,8 @@ const documents: Document[] = [
     folder: 'Firm/Agreements',
     version: null,
     supersedesId: null,
+    // Listed in the folder tree, but we hold no readable content for it.
+    content: null,
     archivedAt: null,
   },
   {
@@ -1260,6 +1340,8 @@ const documents: Document[] = [
     folder: 'Iyer Residence/Quotations',
     version: 'v2',
     supersedesId: null,
+    // Listed in the folder tree, but we hold no readable content for it.
+    content: null,
     archivedAt: null,
   },
   {
@@ -1273,6 +1355,8 @@ const documents: Document[] = [
     folder: 'Iyer Residence/Drawings',
     version: 'Rev C',
     supersedesId: 'doc-iyer-ceiling-drawing-revb',
+    // Listed in the folder tree, but we hold no readable content for it.
+    content: null,
     archivedAt: null,
   },
   {
@@ -1286,6 +1370,8 @@ const documents: Document[] = [
     folder: 'Iyer Residence/Drawings',
     version: 'Rev B',
     supersedesId: null,
+    // Listed in the folder tree, but we hold no readable content for it.
+    content: null,
     archivedAt: null,
   },
   {
@@ -1299,6 +1385,8 @@ const documents: Document[] = [
     folder: 'Kormangala/Drawings',
     version: 'v1',
     supersedesId: null,
+    // Listed in the folder tree, but we hold no readable content for it.
+    content: null,
     archivedAt: null,
   },
 ];

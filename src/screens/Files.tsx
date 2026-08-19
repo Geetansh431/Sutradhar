@@ -9,11 +9,14 @@
  * sits next to its replacement rather than being tidied away — a file nobody
  * can see is a file someone still builds from.
  *
- * Block 05 (document viewer) is not built, so a file does not open here yet.
- * The screen says that rather than offering a click that does nothing.
+ * §6.6: "every file is a source". Selecting a row opens it in block 05, which
+ * is what makes that sentence true rather than aspirational.
  */
 
+import { useState } from 'react';
 import { DataGrid, type GridColumn } from '@/blocks/DataGrid';
+import { DocumentViewer } from '@/blocks/DocumentViewer';
+import { documentView } from '@/domain/selectors/documents';
 import { type FileRow, fileCounts, fileTree } from '@/domain/selectors/files';
 import type { Document, EntityId } from '@/domain/types';
 import { formatShortDate } from '@/lib/dates';
@@ -99,9 +102,15 @@ export function Files({ stateOverride }: FilesProps = {}) {
   const entities = stateOverride?.entities ?? storeEntities;
   const documents = stateOverride?.documents ?? storeDocuments;
 
+  // §6.6: "every file is a source". Selecting one opens it in block 05 — the
+  // third of that block's three homes, alongside the evidence zone and a
+  // provenance click.
+  const [openId, setOpenId] = useState<EntityId | null>(null);
+
   const state = { entities, documents };
   const folders = fileTree(state);
   const counts = fileCounts(state);
+  const open = openId ? documentView({ documents }, openId) : null;
 
   return (
     <main className="mx-auto max-w-6xl space-y-4 px-6 py-6">
@@ -131,6 +140,8 @@ export function Files({ stateOverride }: FilesProps = {}) {
               rows={folder.files}
               columns={columns}
               rowId={(row) => row.id}
+              highlightIds={new Set(openId ? [openId] : [])}
+              onSelectRow={(id) => setOpenId((current) => (current === id ? null : id))}
               caption={folder.path}
               askHint={false}
             />
@@ -138,9 +149,23 @@ export function Files({ stateOverride }: FilesProps = {}) {
         ))
       )}
 
-      <p className="text-faint text-xs">
-        Opening a file needs the document viewer, which is not built in this prototype.
-      </p>
+      {open ? (
+        <section className="rounded-lg border border-brand p-4">
+          <DocumentViewer view={open} />
+          <button
+            type="button"
+            onClick={() => setOpenId(null)}
+            className="mt-3 cursor-pointer text-brand text-xs hover:underline"
+          >
+            Close
+          </button>
+        </section>
+      ) : (
+        <p className="text-faint text-xs">
+          Select a file to open it. Every file is a source — any figure read from one links back to
+          the passage it came from.
+        </p>
+      )}
     </main>
   );
 }

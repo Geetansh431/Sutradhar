@@ -89,7 +89,10 @@ describe('Files — the screen', () => {
     expect(html).toContain('unreadable · needs a human');
   });
 
-  it('admits the document viewer is not built rather than offering a dead click', () => {
-    expect(html).toContain('not built in this prototype');
+  it('makes §6.6\'s "every file is a source" true — a file opens', () => {
+    // This used to read "the document viewer is not built in this prototype".
+    // Block 05 exists now, so Files opens into it.
+    expect(html).toContain('Select a file to open it');
+    expect(html).toContain('links back to the passage it came from');
   });
 });
