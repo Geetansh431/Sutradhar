@@ -1,6 +1,6 @@
 # Sutradhar — build state and handoff
 
-**Last updated:** 19 August 2026 · at commit `46e09e1`+ · 441 tests passing · working tree clean
+**Last updated:** 19 August 2026 · at commit `71d268f`+ · 449 tests passing · working tree clean
 
 This document exists so a new session can continue without re-deriving context. It says what
 the thing is, what is built, what is not, and what to do next. `CLAUDE.md` holds the rules;
@@ -69,8 +69,9 @@ What the demo must never do: show a form being filled in, show a settings page, 
 state over two seconds, show the AI certain about something it inferred, or explain a screen
 before using it.
 
-`/settings` now exists (the rail footer needed a destination) and is read-only with no form in
-it, but the rule stands: **do not visit it during the five minutes.**
+`/settings` exists (the rail footer needed a destination) and is read-only with no form in it —
+it states §6.9's two columns rather than offering editors. The rule stands regardless: **do not
+visit it during the five minutes.**
 
 ---
 
@@ -255,6 +256,13 @@ while w11 plainly draws Godrej's terms as "unknown". The shortfall reason moved 
 about. **A question's `area` decides which coverage bar opens it (§6.8), so it is a routing
 decision, not a label.**
 
+**The schema boundary is content, not copy.** `src/fixtures/schema.ts` holds §6.9's two columns —
+six things a firm may shape, five it may not — each with the reason it sits on that side. The
+right-hand column is the load-bearing half: a product that let you redefine what a payment means,
+or edit your own audit log, would have no ground left to stand on when it says a figure carries
+its source. `schema.test.ts` pins both lists, so moving "the audit log" to the editable side
+means deleting a test that says why it is there.
+
 **Type is settled, and the app makes no network request.** Source Serif 4 for display, Inter for
 UI, both self-hosted via `@fontsource-variable` and imported in `main.tsx` — so the demo renders
 identically with the wifi off. `index.html` used to also pull DM Sans from Google Fonts, which
@@ -337,27 +345,28 @@ badge is permanent.
 
 ## Pending work
 
-Ordered by what it buys the demo. **Everything the two previous handoffs listed is done** —
-block 08, the project workspace, `kormangala-handover`, all three dead rail links, block 06 and
-`july-across-projects`. The margin question is settled: 37.0%, recorded above, do not re-open.
+**Nothing is outstanding.** Every item the four previous handoffs listed is done: block 08 and
+the project workspace, `kormangala-handover`, all three dead rail links, block 06 and
+`july-across-projects`, block 10, block 05, the `?s=` links, the type pairing, `iyer-margin`, and
+Settings against §6.9. The margin question is settled at 37.0% — recorded above, do not re-open.
 
-### 1. Settings is thinner than §6.9
+All ten blocks are built, all twelve screens exist, and all seven canned questions answer. What
+remains is not a list of gaps but a judgement call about the five minutes: see the two beats
+under "The demo arc" that the script does not yet use.
 
-§6.9 splits the screen into editable (stage names and order, vendor and cost categories, custom
-fields on any entity) and not-editable (folder conventions, users and roles), and says it "exists
-because the schema-freedom promise in §7.5 has to be true somewhere".
+### If you are looking for something to do
 
-What is built is the read-only half: roles, users, and a statement of the schema. Nothing is
-editable, because §10 forbids the demo showing a form and the screen is never visited during the
-five minutes — building editors nobody opens is the wrong trade at this stage.
+In rough order of what it would buy:
 
-**But the deviation is real**: schema freedom is currently *asserted* on this screen rather than
-demonstrated. If a viewer asks "can I rename a stage?", there is nothing to show them. Worth
-building if that question comes up in a rehearsal.
-
-### 2. Nothing else is outstanding
-
-Everything else the earlier handoffs listed is closed.
+1. **Rehearse the arc end to end** and time it. Every beat works in isolation; nobody has walked
+   all seven in sequence against a clock. That is the one test the build has never had.
+2. **Decide whether the workspace or `kormangala-handover` earns a place** in the five minutes.
+   Both are strong and neither is scripted — see "The demo arc".
+3. **Settings could demonstrate rather than state.** It now shows §6.9's two columns with a
+   reason on every line, which is what §7.5 needs to be true. Making one of them genuinely
+   editable — stage names, through a change preview — would prove it instead. Deliberately not
+   done: §10 forbids showing a form, and §7.5 puts the real freedom in pinning, "with zero setup
+   burden and no settings page involved".
 
 ---
 

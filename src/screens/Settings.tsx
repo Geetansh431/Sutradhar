@@ -1,20 +1,29 @@
 /**
- * Settings — IA §4.1: "Schema, roles, users. Tucked in the rail footer."
+ * Settings — spec §6.9, IA §4.1.
  *
- * Deliberately the dullest screen in the product, and deliberately read-only.
+ * "Deliberately thin, and the only place in the product that looks like
+ * configuration. It exists because the schema-freedom promise in §7.5 has to be
+ * true somewhere."
  *
- * §10 says the demo must never show a form being filled in or a settings page,
- * and this does not contradict that: the rule governs the *script*, not whether
- * the destination exists. A rail link that goes nowhere is a dead end, which
- * the day 8–9 bar forbids. So the screen exists, states what the firm is
- * configured as, and is never visited during the five minutes.
+ * So the screen's job is to *state the boundary*, not to hold editors. §6.9's
+ * two columns are the content: what a firm may shape, and what it may not. The
+ * right-hand column is the load-bearing half — a product that let you redefine
+ * what a payment means, or edit your own audit log, would have no ground left
+ * to stand on when it says a figure carries its source.
  *
- * It shows what was inferred during onboarding rather than offering knobs —
- * which is the actual claim: nothing here had to be configured.
+ * Read-only throughout, for two reasons that agree. §10 forbids the demo
+ * showing a form being filled in; and §7.5 locates the real freedom elsewhere —
+ * "each firm ends up with a product shaped to how it actually thinks, with zero
+ * setup burden and no settings page involved". The screens a firm keeps from
+ * the Canvas are the larger half of that freedom, arrived at by asking.
+ *
+ * The rule about never *visiting* this screen during the five minutes stands.
+ * It exists so the rail footer is not a dead end.
  */
 
 import { currentRole } from '@/domain/selectors/role';
 import type { EntityId, Person } from '@/domain/types';
+import { EDITABLE, NOT_EDITABLE } from '@/fixtures/schema';
 import { type EntityTable, useStore } from '@/store/store';
 
 const ROLE_SUMMARY: Record<string, string> = {
@@ -79,16 +88,50 @@ export function Settings({ stateOverride }: SettingsProps = {}) {
         </ul>
       </section>
 
+      {/* §6.9's two columns. The right-hand one is not an apology for a missing
+          feature — it is the statement that makes the left-hand one credible. */}
       <section className="rounded-lg border border-line p-4">
-        <h2 className="mb-2 font-medium text-ink text-xs uppercase tracking-wide">Schema</h2>
-        <p className="text-mute text-sm">
-          Projects, clients, vendors, people, payments, tasks and documents — with a source and a
-          state on every field. The shape came from the firm's own files; it was not chosen from a
-          template.
+        <h2 className="mb-1 font-medium text-ink text-xs uppercase tracking-wide">Schema</h2>
+        <p className="mb-4 text-mute text-sm">
+          The shape came from your own files; it was not chosen from a template. Some of it is yours
+          to change, and some of it is what everything else depends on.
         </p>
-        <p className="mt-2 text-faint text-xs">
-          This prototype holds no account, no billing and no integrations, so there is nothing else
-          to set.
+
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div>
+            <h3 className="mb-2 font-medium text-ink text-xs uppercase tracking-wide">
+              Yours to shape
+            </h3>
+            <dl className="space-y-2.5">
+              {EDITABLE.map((rule) => (
+                <div key={rule.id}>
+                  <dt className="text-ink text-sm">{rule.label}</dt>
+                  <dd className="text-faint text-xs">{rule.because}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <div>
+            <h3 className="mb-2 font-medium text-ink text-xs uppercase tracking-wide">
+              Fixed, and why
+            </h3>
+            <dl className="space-y-2.5">
+              {NOT_EDITABLE.map((rule) => (
+                <div key={rule.id}>
+                  <dt className="text-mute text-sm">{rule.label}</dt>
+                  <dd className="text-faint text-xs">{rule.because}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
+
+        <p className="mt-4 border-line/60 border-t pt-3 text-faint text-xs">
+          Nothing here is edited in this prototype. In the product each of the left-hand items
+          changes through a change preview, like every other write — and the screens you keep from
+          the Canvas are the larger half of the same freedom, arrived at by asking rather than
+          configuring.
         </p>
       </section>
     </main>
