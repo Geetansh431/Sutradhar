@@ -18,6 +18,7 @@ import { moneyWindow } from '@/domain/selectors/money';
 import { buildReport } from '@/domain/selectors/report';
 import { scheduleView } from '@/domain/selectors/tasks';
 import { vendorExposure } from '@/domain/selectors/vendors';
+import { projectMoneyFor } from '@/domain/selectors/workspace';
 import type { Document, EntityId } from '@/domain/types';
 import type { SourceRef } from '@/lib/field';
 import { addPaise, formatINR, type Paise, ZERO } from '@/lib/money';
@@ -33,7 +34,11 @@ export type ResolverState = { entities: EntityTable; documents: Document[] };
  * so the value is a discriminated union and only `money` carries `Paise`.
  * `display` is the only part that reaches the screen either way.
  */
-export type MetricValue = { unit: 'money'; amount: Paise } | { unit: 'days'; count: number };
+export type MetricValue =
+  | { unit: 'money'; amount: Paise }
+  | { unit: 'days'; count: number }
+  /** A ratio in 0..1. Margin is a share, not a sum — see `ratioPaise`. */
+  | { unit: 'percent'; ratio: number };
 
 export type ResolvedMetric = {
   value: MetricValue;
@@ -143,9 +148,30 @@ function resolveMetric(state: ResolverState, ref: MetricRef): ResolvedMetric {
       };
     }
 
-    case 'collectible-this-week':
-    case 'payable-next-14-days':
     case 'project-margin': {
+      // Scope names the project; without one there is nothing to compute.
+      // `projectMoneyFor`, not `workspace`: the Canvas gates on `canSeeMoney`
+      // before it resolves anything, so the cut is already made upstream.
+      const projectMoney = ref.scope
+        ? projectMoneyFor({ entities: state.entities }, ref.scope.id)
+        : null;
+
+      if (!projectMoney || projectMoney.marginPct === null) {
+        return { value: money(ZERO), display: '—', hasUnconfirmed: false, unconfirmedLabels: [] };
+      }
+
+      return {
+        value: { unit: 'percent', ratio: projectMoney.marginPct },
+        display: `${(projectMoney.marginPct * 100).toFixed(1)}%`,
+        // The margin is built from confirmed figures only. What is unconfirmed
+        // is the estimate sitting beside it, and the caveat names that.
+        hasUnconfirmed: projectMoney.restsOnUnconfirmed,
+        unconfirmedLabels: projectMoney.restsOnUnconfirmed ? ['a figure this margin rests on'] : [],
+      };
+    }
+
+    case 'collectible-this-week':
+    case 'payable-next-14-days': {
       // Planned for, not yet resolved. Returning zero would be a fabricated
       // number, so the Canvas treats an unresolved metric as a gap instead.
       return {
@@ -200,12 +226,16 @@ export function resolve(state: ResolverState, plan: CanvasPlan): ResolvedAnswer 
   if (metric?.hasUnconfirmed) {
     const names = metric.unconfirmedLabels.join(' and ');
     const count = metric.unconfirmedLabels.length;
-    // Mandatory, and it names which figure (§7.2). A day count has no total to
-    // be excluded from, so the two units say different second halves.
-    const consequence =
-      metric.value.unit === 'money'
-        ? 'Shown with a dotted underline, and excluded from the total.'
-        : `${count === 1 ? 'That slip is' : 'Those slips are'} inherited from the task above, not measured on site.`;
+    // Mandatory, and it names which figure (§7.2). Each unit says a different
+    // second half, because they have different consequences: a day count has no
+    // total to be excluded from, and a share has no total either — what it has
+    // is a denominator someone may not have confirmed.
+    const CONSEQUENCE: Record<MetricValue['unit'], string> = {
+      money: 'Shown with a dotted underline, and excluded from the total.',
+      days: `${count === 1 ? 'That slip is' : 'Those slips are'} inherited from the task above, not measured on site.`,
+      percent: 'The share moves if that figure does.',
+    };
+    const consequence = CONSEQUENCE[metric.value.unit];
     caveats.push(
       `${count === 1 ? 'One figure here is' : `${count} figures here are`} unconfirmed — ${names}. ` +
         consequence,

@@ -13,6 +13,7 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { siteFeed, stageSteps, workspace } from '@/domain/selectors/workspace';
 import { buildState } from '@/fixtures/scenarios';
+import { formatINR } from '@/lib/money';
 import { ProjectWorkspace } from '@/screens/ProjectWorkspace';
 
 const live = buildState('live');
@@ -89,6 +90,31 @@ describe('the fact row', () => {
   });
 });
 
+describe('silent margin at risk — the unpriced change order', () => {
+  const view = workspace(stateFor('person-anil'), 'project-iyer');
+
+  it('sums what has been agreed and never priced', () => {
+    // The wardrobe: ~₹45,000 (w06, w08), estimated from the last two jobs.
+    expect(view?.money && formatINR(view.money.atRisk)).toBe('₹45,000');
+  });
+
+  it('does not subtract it from the margin — rule 3 admits confirmed money only', () => {
+    // An estimate nobody has stood behind is exactly what that rule excludes.
+    // Stating it beside the margin is the honest shape; folding it in is not.
+    expect(view?.money?.marginPct).toBeCloseTo(0.3696, 3);
+  });
+
+  it('says what the margin becomes if the estimate holds', () => {
+    expect(view?.money?.marginPctIfPriced).toBeCloseTo(0.3451, 3);
+  });
+
+  it('is nothing on a project where everything is priced', () => {
+    const kormangala = workspace(stateFor('person-anil'), 'project-kormangala');
+    expect(kormangala?.money && formatINR(kormangala.money.atRisk)).toBe('₹0');
+    expect(kormangala?.money?.marginPctIfPriced).toBeNull();
+  });
+});
+
 describe('the site feed — w08', () => {
   it("puts Ravi's 08:10 note at the top, newest first", () => {
     const feed = siteFeed(stateFor('person-anil'), 'project-iyer');
@@ -153,6 +179,20 @@ describe('the role cut — §3.2, §9.2 rule #6', () => {
     const html = text(teamHtml);
     expect(html).toContain('Change order: Wardrobe');
     expect(html).toContain('not been quoted');
+  });
+});
+
+describe('the at-risk figure is money, so Team never sees it', () => {
+  it('leaks no rupee figure and no at-risk caveat', () => {
+    const html = text(render('person-ravi'));
+    expect(html).not.toMatch(/₹/);
+    expect(html).not.toContain('unpriced is not in this');
+  });
+
+  it('still shows the work itself — the task exists, its cost does not', () => {
+    // Ravi has to know the wardrobe is waiting on a decision; what it might
+    // cost is the part §3.2 withholds.
+    expect(text(render('person-ravi'))).toContain('Wardrobe');
   });
 });
 

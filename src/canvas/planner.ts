@@ -275,6 +275,60 @@ const PLANS: Record<string, unknown> = {
       'What did each project actually earn?',
     ],
   },
+
+  /**
+   * "What's my real margin on Iyer?" — the §5.4 projects shape.
+   *
+   * "Real" is the word the question turns on, and the honest answer is that the
+   * reported margin is real and also about to move: a wardrobe was agreed on
+   * site and never priced, so it is a cost the quotation does not contain.
+   *
+   * The headline therefore leads with the leak rather than the figure (§9.3 —
+   * say the consequence). The margin itself is confirmed; the ₹45,000 beside it
+   * is inferred and is excluded from every total by rule 3, which is precisely
+   * why it has to be *said* rather than quietly subtracted.
+   */
+  'iyer-margin': {
+    questionId: 'iyer-margin',
+    answer: {
+      headline: '{metric} before the wardrobe nobody has priced',
+      metric: {
+        metric: 'project-margin',
+        scope: { kind: 'project', id: 'project-iyer' },
+        period: null,
+      },
+    },
+    narrative: [
+      'Margin is value less what has been paid out and what has been ordered — cost is real when the work is ordered, not when the cheque clears.',
+      'One thing is missing from it. The extra wardrobe was agreed on site and never quoted, so the client has not been asked to pay for it and no total counts it yet. Pricing it is what turns a silent loss into a decision.',
+    ],
+    caveats: [],
+    working: [
+      {
+        block: 'record-card',
+        entity: { kind: 'project', id: 'project-iyer' },
+      },
+      {
+        block: 'task-tree',
+        projectId: 'project-iyer',
+        highlight: ['task-iyer-wardrobe-change-order'],
+      },
+    ],
+    evidence: ['doc-iyer-quotation', 'doc-iyer-contract', 'human-anil-kumar'],
+    actions: [
+      {
+        label: 'Price the wardrobe',
+        intent: 'confirm-fields',
+        target: { kind: 'task', id: 'task-iyer-wardrobe-change-order' },
+      },
+      { label: 'Pin this view', intent: 'pin', target: null },
+    ],
+    followUps: [
+      'What else is unpriced across the firm?',
+      'Same view for Kormangala',
+      'What did we quote the wardrobe at last time?',
+    ],
+  },
 };
 
 /**

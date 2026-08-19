@@ -28,10 +28,10 @@
  * own numbers contradict it. Flagged rather than quietly reconciled.
  */
 
-import type { EntityId, Project, ProjectStage, SiteNote } from '@/domain/types';
+import type { EntityId, Project, ProjectStage, SiteNote, Task } from '@/domain/types';
 import { daysFromToday } from '@/lib/dates';
 import { hasValue, isConfirmed, type Total, totalMoney } from '@/lib/field';
-import { type Paise, ratioPaise, subPaise, ZERO } from '@/lib/money';
+import { addPaise, type Paise, ratioPaise, subPaise, ZERO } from '@/lib/money';
 import type { EntityTable } from '@/store/store';
 import { canSeeMoney, type RoleState } from './role';
 
@@ -89,6 +89,23 @@ export function stageSteps(project: Project): StageStep[] {
  * confirmed receipt with one read off a photograph is exactly the total P4
  * forbids. Both totals carry their own exclusions.
  */
+/**
+ * The money half of a workspace, with no role check.
+ *
+ * For callers that have already applied the cut — the Canvas gates on
+ * `canSeeMoney` before it resolves anything, so re-deriving the role from a
+ * `currentUserId` it does not carry would be a second, weaker check. Same
+ * split as `buildReport` / `runReport`.
+ */
+export function projectMoneyFor(
+  state: { entities: EntityTable },
+  projectId: EntityId,
+): ProjectMoney | null {
+  const project = state.entities[projectId];
+  if (!project || project.kind !== 'project' || project.archivedAt !== null) return null;
+  return projectMoney(project, unpricedTasks(state, projectId));
+}
+
 export type ProjectMoney = {
   value: Project['value'];
   received: Total;
@@ -100,12 +117,45 @@ export type ProjectMoney = {
   marginPct: number | null;
   /** True when a figure the margin rests on is not confirmed — say so, never hide it. */
   restsOnUnconfirmed: boolean;
+  /**
+   * Cost this project has taken on that no total counts yet — work agreed on
+   * site and never priced (§6.3, "silent margin at risk").
+   *
+   * It is *not* subtracted from `margin`: rule 3 admits only confirmed money to
+   * a total, and an estimate nobody has stood behind is exactly what that rule
+   * excludes. Stating it beside the margin rather than inside it is the honest
+   * shape — the margin is real, and so is the thing about to reduce it.
+   */
+  atRisk: Paise;
+  /** What the margin becomes if the estimates hold. Null when nothing is at risk. */
+  marginPctIfPriced: number | null;
 };
 
-function projectMoney(project: Project): ProjectMoney {
+/** Work agreed and never priced — what the margin does not yet know about. */
+const unpricedTasks = (state: { entities: EntityTable }, projectId: EntityId): Task[] =>
+  Object.values(state.entities).filter(
+    (entity): entity is Task =>
+      entity.kind === 'task' &&
+      entity.projectId === projectId &&
+      entity.archivedAt === null &&
+      entity.estimatedCost !== null,
+  );
+
+function projectMoney(project: Project, unpriced: Task[]): ProjectMoney {
   const received = totalMoney(project.received);
   const spent = totalMoney(project.spent);
   const committed = totalMoney(project.committed);
+
+  // Estimates, summed outside `totalMoney` because that function admits only
+  // confirmed figures — which is the right rule, and the reason this number
+  // has to live beside the margin rather than in it.
+  const atRisk = unpriced.reduce(
+    (total, task) =>
+      task.estimatedCost && hasValue(task.estimatedCost)
+        ? addPaise(total, task.estimatedCost.value)
+        : total,
+    ZERO,
+  );
 
   // Cost is real when the work is ordered, not when the cheque clears — so
   // committed money is subtracted alongside spent. Margin computed from spent
@@ -123,6 +173,11 @@ function projectMoney(project: Project): ProjectMoney {
     marginPct: hasValue(project.value) ? ratioPaise(margin, project.value.value) : null,
     restsOnUnconfirmed:
       !isConfirmed(project.value) || spent.excludedCount > 0 || committed.excludedCount > 0,
+    atRisk,
+    marginPctIfPriced:
+      atRisk > ZERO && hasValue(project.value)
+        ? ratioPaise(subPaise(margin, atRisk), project.value.value)
+        : null,
   };
 }
 
@@ -215,12 +270,14 @@ export function workspace(state: WorkspaceState, projectId: EntityId): Workspace
   const showMoney = canSeeMoney(roleState);
   const client = state.entities[project.clientId];
 
+  const unpriced = unpricedTasks(state, projectId);
+
   return {
     project,
     clientName: client && 'name' in client ? client.name : 'Unknown',
     stages: stageSteps(project),
     handoverDate: project.handoverDate,
-    money: showMoney ? projectMoney(project) : null,
+    money: showMoney ? projectMoney(project, unpriced) : null,
     feed: siteFeed(state, projectId),
     decisions: decisions(state, projectId, showMoney),
   };

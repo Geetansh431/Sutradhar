@@ -58,7 +58,16 @@ export function FactRow({ view }: { view: Workspace }) {
           </Fact>
           <Fact
             label="Margin now"
-            caveat={money.restsOnUnconfirmed ? 'rests on an unconfirmed figure' : null}
+            // The unpriced work is the more useful caveat when there is any:
+            // "rests on an unconfirmed figure" is a caution, but "₹45,000 is
+            // not in this" is the thing that changes what the reader does.
+            caveat={
+              money.atRisk > 0
+                ? `${formatINR(money.atRisk)} unpriced is not in this`
+                : money.restsOnUnconfirmed
+                  ? 'rests on an unconfirmed figure'
+                  : null
+            }
           >
             <span className="tabular">
               {money.marginPct === null ? '—' : `${(money.marginPct * 100).toFixed(1)}%`}

@@ -404,8 +404,10 @@ export function TaskTree({
                     assigneeId: null,
                     deadline: { state: 'missing', blocks: ['handover countdown'] },
                     status: 'unassigned',
-                    // A brand-new task has not slipped against anything yet.
+                    // A brand-new task has not slipped against anything yet,
+                    // and nobody has estimated what it will cost.
                     slippedDays: null,
+                    estimatedCost: null,
                     linkedPaymentId: null,
                     archivedAt: null,
                   },

@@ -1,6 +1,6 @@
 # Sutradhar — build state and handoff
 
-**Last updated:** 19 August 2026 · at commit `b1782e5`+ · 434 tests passing · working tree clean
+**Last updated:** 19 August 2026 · at commit `46e09e1`+ · 441 tests passing · working tree clean
 
 This document exists so a new session can continue without re-deriving context. It says what
 the thing is, what is built, what is not, and what to do next. `CLAUDE.md` holds the rules;
@@ -223,6 +223,14 @@ work owed but unbilled, and margin subtracts it alongside `spent`. Margin from `
 flatters every project mid-execution — which is exactly the blindness the change-order story is
 about.
 
+**Unpriced work is stated beside the margin, never inside it.** `ProjectMoney.atRisk` sums
+`Task.estimatedCost` for work agreed on site and never quoted — Iyer's wardrobe, ~₹45,000 (w06,
+w08). It is *not* subtracted from the margin: rule 3 admits only confirmed money to a total, and
+an estimate nobody has stood behind is exactly what that rule excludes. So the margin stays 37.0%
+and the answer says what it becomes if the estimate holds (34.5%). The estimate is necessarily
+`inferred` — a change order that had been priced would carry a payment, not an estimate — which
+is why it renders dotted and why being unable to confirm it *is* the finding.
+
 **Margin: 37.0% on Iyer, and w08's 12.4% is wrong. Decided 17 Aug 2026 — do not re-open.**
 No combination of the figures w08 prints in that same row produces 12.4%: value ₹18,40,000,
 received ₹9,20,000, spent ₹7,10,000 give 11.4% as `(received − spent) / value` and 61.4% as
@@ -273,8 +281,10 @@ The planner returns a **plan** — block types, entity refs, filters. Never a va
 the build even if the figure is correct. The resolver fills values from the store and builds
 mandatory caveats naming each unconfirmed figure.
 
-Eight canned questions in `questions.ts`, covering all six §5.4 shapes. **Six have plans, and
-all six answer fully:**
+Eight canned questions in `questions.ts`, covering all six §5.4 shapes. **Seven have plans and
+all seven answer fully.** The eighth is not unplanned — `sharma-bill-capture` is a capture, not
+a question, and takes the §7.6 path by design. There is no longer any canned question the Canvas
+cannot answer:
 
 | Question | Group | Status |
 |---|---|---|
@@ -284,11 +294,18 @@ all six answer fully:**
 | `vendors-without-terms` | people | ✅ composes block 10 |
 | `kormangala-handover` | projects | ✅ composes block 08 |
 | `july-across-projects` | money | ✅ composes block 06 |
-| `iyer-margin` | projects | ⛔ no plan — see the margin note below |
+| `iyer-margin` | projects | ✅ leads with the leak, not the figure |
 | `sharma-bill-capture` | capture | ↪ not unanswered — takes the capture path (§7.6) |
 
 `CoPanel` renders every block a plan can name: `data-grid`, `chart`, `money-timeline`,
-`task-tree`, `report` and `gap`. **No answer shows scaffolding on screen any more.**
+`task-tree`, `report`, `gap` and `record-card`. **No answer shows scaffolding on screen any
+more.** The `record-card` case handles projects only — another entity kind would want its own
+field list, and says so rather than rendering a generic one.
+
+**Action intents are a closed set** (`plan.ts`), and the schema catches an invented one at build
+time: `iyer-margin` first carried an `open` intent to jump to the workspace, and the plan failed
+to validate. There is deliberately no navigation verb — an action proposes a change, it does not
+move the user.
 
 **A headline must lead with `{metric}`.** The co-panel lifts the figure into the large line and
 renders the remainder as the subtitle, so "July closed at {metric} across the firm" renders as
@@ -324,13 +341,7 @@ Ordered by what it buys the demo. **Everything the two previous handoffs listed 
 block 08, the project workspace, `kormangala-handover`, all three dead rail links, block 06 and
 `july-across-projects`. The margin question is settled: 37.0%, recorded above, do not re-open.
 
-### 1. `iyer-margin` — a decision, not a block
-
-The only canned question still without a plan, and it wants no block. What it needs is a decision
-about what a margin answer should *say* now the figure is settled at 37.0% — in particular
-whether it leads with margin now, or with the change order that is quietly eating it.
-
-### 2. Settings is thinner than §6.9
+### 1. Settings is thinner than §6.9
 
 §6.9 splits the screen into editable (stage names and order, vendor and cost categories, custom
 fields on any entity) and not-editable (folder conventions, users and roles), and says it "exists
@@ -344,7 +355,7 @@ five minutes — building editors nobody opens is the wrong trade at this stage.
 demonstrated. If a viewer asks "can I rename a stage?", there is nothing to show them. Worth
 building if that question comes up in a rehearsal.
 
-### 3. Nothing else is outstanding
+### 2. Nothing else is outstanding
 
 Everything else the earlier handoffs listed is closed.
 

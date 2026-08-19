@@ -171,9 +171,10 @@ describe('when the Canvas cannot answer — §7.7', () => {
   });
 
   it('an unplanned question says so and does not improvise', () => {
-    const html = render('iyer-margin');
-    expect(text(html)).toContain('cannot answer that one yet');
-    expect(text(html)).not.toMatch(/₹/);
+    // Every canned question has a plan now, so §7.7's "no data" path is
+    // exercised with an id that is real but unplanned rather than a real gap.
+    const html = render('vendors-without-contracts');
+    expect(text(html)).toContain('Nothing canned matches that');
   });
 
   it('the handover question composes block 08 and states the slip', () => {
@@ -224,6 +225,16 @@ describe('when the Canvas cannot answer — §7.7', () => {
     expect(html).toContain('Payments_Master.xlsx');
     // The openable cards are buttons; the human answer is not.
     expect(html).toMatch(/<button[^>]*>(?:(?!<\/button>).)*Payments_Master\.xlsx/s);
+  });
+
+  it('the margin question leads with the leak, not the figure', () => {
+    const html = text(render('iyer-margin'));
+    // §9.3: the consequence, not the status. 37.0% is true and about to move.
+    expect(html).toContain('37.0%');
+    expect(html).toContain('before the wardrobe nobody has priced');
+    expect(html).toContain('₹45,000');
+    // The estimate is stated beside the margin, never folded into it (rule 3).
+    expect(html).toContain('34.5% if it holds');
   });
 
   it('an unknown question offers what can be asked instead', () => {

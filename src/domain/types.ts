@@ -158,6 +158,15 @@ export type Task = {
    * it, which is why it carries provenance like any other observed fact.
    */
   slippedDays: FieldValue<number> | null;
+  /**
+   * What this work is expected to cost, where nobody has priced it yet — spec
+   * §6.3's "silent margin at risk".
+   *
+   * Necessarily `inferred`: a change order that had been priced would carry a
+   * payment, not an estimate. Being unable to confirm it *is* the finding, so
+   * the figure renders dotted and never counts toward a total (rule 3).
+   */
+  estimatedCost: FieldValue<Paise> | null;
   linkedPaymentId: EntityId | null;
   archivedAt: string | null;
 };

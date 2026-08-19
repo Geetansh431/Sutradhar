@@ -19,6 +19,7 @@ import { DocumentViewer } from '@/blocks/DocumentViewer';
 import { Gap } from '@/blocks/Gap';
 import { MoneyTimeline } from '@/blocks/MoneyTimeline';
 import { paymentColumns, uncoveredIds } from '@/blocks/paymentColumns';
+import { fieldRow, plainRow, RecordCard } from '@/blocks/RecordCard';
 import { Report } from '@/blocks/Report';
 import { TaskTree } from '@/blocks/TaskTree';
 import type { BlockRef } from '@/canvas/plan';
@@ -30,6 +31,7 @@ import { buildReport } from '@/domain/selectors/report';
 import { taskTree } from '@/domain/selectors/tasks';
 import type { VendorExposure } from '@/domain/selectors/vendors';
 import { exposureShares, vendorExposure } from '@/domain/selectors/vendors';
+import { projectMoneyFor } from '@/domain/selectors/workspace';
 import type { Document } from '@/domain/types';
 import { cn } from '@/lib/cn';
 import { formatINR } from '@/lib/money';
@@ -83,6 +85,7 @@ const blockKey = (block: BlockRef): string => {
   if (block.block === 'gap') return `gap-${block.area}`;
   if (block.block === 'task-tree') return `task-tree-${block.projectId}`;
   if (block.block === 'report') return `report-${block.template}`;
+  if (block.block === 'record-card') return `record-card-${block.entity.id}`;
   return block.block;
 };
 
@@ -150,6 +153,50 @@ function PlannedBlock({
           {...(from ? { from } : {})}
           stateOverride={{ entities }}
         />
+      );
+    }
+
+    case 'record-card': {
+      // Only projects so far — the one entity a plan currently opens a card on.
+      // Another kind would want its own field list, not a generic one.
+      const entity = entities[block.entity.id];
+      if (!entity || entity.kind !== 'project') {
+        return (
+          <p className="py-6 text-center text-faint text-sm">
+            No card for “{block.entity.id}” in this scenario.
+          </p>
+        );
+      }
+
+      const money = projectMoneyFor({ entities }, entity.id);
+      const fields = [
+        fieldRow('value', 'Contract value', entity.value, formatINR),
+        ...(money
+          ? [
+              plainRow('spent', 'Paid out', formatINR(money.spent.value)),
+              plainRow('committed', 'Ordered, not yet paid', formatINR(money.committed.value)),
+              plainRow(
+                'margin',
+                'Margin now',
+                `${formatINR(money.margin)} · ${((money.marginPct ?? 0) * 100).toFixed(1)}%`,
+              ),
+              // The leak, stated beside the margin rather than inside it —
+              // rule 3 keeps an unconfirmed estimate out of every total.
+              ...(money.atRisk > 0
+                ? [
+                    plainRow(
+                      'at-risk',
+                      'Unpriced, at risk',
+                      `${formatINR(money.atRisk)} · ${((money.marginPctIfPriced ?? 0) * 100).toFixed(1)}% if it holds`,
+                    ),
+                  ]
+                : []),
+            ]
+          : []),
+      ];
+
+      return (
+        <RecordCard title={entity.name} subtitle="Margin" fields={fields} entityId={entity.id} />
       );
     }
 
