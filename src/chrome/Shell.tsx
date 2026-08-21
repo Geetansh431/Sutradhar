@@ -45,7 +45,11 @@ export function Shell() {
   ].filter((p): p is Person => p !== undefined);
 
   return (
-    <div className="flex min-h-dvh bg-background text-foreground">
+    // Exactly the viewport, never taller: the rail is `h-dvh` and stays put
+    // only if the *window* never scrolls. With `min-h-dvh` a long screen grew
+    // the page and carried the rail up out of view with it. The content pane
+    // below owns the scroll instead.
+    <div className="flex h-dvh overflow-hidden bg-background text-foreground">
       <Rail
         destinations={destinations(roleState)}
         pins={visiblePins(roleState, pinned)}
@@ -53,7 +57,7 @@ export function Shell() {
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between gap-4 border-line border-b bg-paper px-6 py-3">
+        <header className="flex shrink-0 items-center justify-between gap-4 border-line border-b bg-paper px-6 py-3">
           <AskBar onPick={(question) => navigate(link(`/canvas/${question.id}`))} />
 
           <div className="flex items-center gap-3">
@@ -72,7 +76,8 @@ export function Shell() {
           </div>
         </header>
 
-        <div className="min-w-0 flex-1">
+        {/* The one scroll container. The topbar sits above it and stays. */}
+        <div className="min-w-0 flex-1 overflow-y-auto">
           <Outlet />
         </div>
       </div>

@@ -180,6 +180,16 @@
   * {
     @apply border-border outline-ring/40;
   }
+  /* The document itself never scrolls — the shell is exactly one viewport and
+     the content pane inside it owns the scroll, so the rail stays put.
+     `overflow: hidden` on the shell div is not enough on its own: a
+     `scrollIntoView` deep inside it still scrolls the *document*, which drags
+     the rail off the top. Pinning html and body is what actually holds it. */
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
   body {
     @apply bg-background text-foreground;
     font-feature-settings:
