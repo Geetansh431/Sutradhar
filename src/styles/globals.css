@@ -3,59 +3,87 @@
 
 /* ─────────────────────────────────────────────────────────────
    SUTRADHAR THEME
-   Neutrals are Vercel's light scale (Geist); the terracotta accent and the
-   field-state colours are the wireframes', converted to OKLCH.
-   The pairing is decided: Source Serif 4 for display, Inter for UI, both
-   self-hosted via @fontsource-variable. Swapping it is still a one-line
-   change — check any candidate on /lab/type against ₹18,40,000 first.
+   Monochrome: neutrals and chrome are greys, and the only colours are the two
+   status hues and the chart accent. The dotted underline, not a colour, is what
+   marks an extracted figure.
+   Type is Geist throughout, self-hosted. Swapping it is a one-line change —
+   check any candidate on /lab/type against ₹18,40,000 first, since not every
+   face carries ₹ well at small sizes.
    ───────────────────────────────────────────────────────────── */
 
 :root {
-  /* — type ————————————————————————————— */
-  /* Both come from @fontsource-variable, imported in main.tsx — the app makes
-     no network request at all, so it renders identically with the wifi off.
-     The "… Variable" names are what those packages register; the plain names
-     follow for a machine that happens to have the static family installed. */
-  --font-display: "Source Serif 4 Variable", "Source Serif 4", Georgia, serif;
-  --font-ui: "Inter Variable", "Inter", system-ui, sans-serif;
-  /* No webfont: figures are Inter with tabular numerals (see `.tabular`), and
-     nothing in the product sets a mono family. This is the fallback chain a
-     future code or id display would get, not a font we ship. */
+  /* — type —————————————————————————————
+     Geist throughout — Vercel's own face, and the one this theme is built
+     around. Display and UI are the same family: Geist has no serif companion,
+     and a grotesque set large reads as a statement in its own right, so the
+     answer figure keeps its weight without changing family.
+
+     These two lines and the import in `main.tsx` must always name the same
+     family. Naming a font the import does not load is silent (it falls through
+     to `system-ui`); importing a package that is not installed is not — Vite
+     fails to resolve and the app does not boot at all.
+
+     Self-hosted via @fontsource-variable, like everything else here — the app
+     makes no network request at all and renders identically with the wifi off.
+     The "Variable" name is what the package registers; the plain name follows
+     for a machine with the static family installed. */
+  --font-display: "Geist Variable", "Geist", system-ui, sans-serif;
+  --font-ui: "Geist Variable", "Geist", system-ui, sans-serif;
+  /* No webfont: figures use tabular numerals (see `.tabular`), which keeps
+     rupee columns aligned without the width cost of a mono face. */
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
 
   /* — raw palette ———————————————————————
-     Neutrals are Vercel's light scale (Geist), chroma exactly zero — the
-     warmth is gone from the greys deliberately, so the one warm thing on
-     screen is the accent and it reads as a signal rather than as the house
-     style. Borders are #DFDFDF rather than Vercel's #EAEAEA: at #EAEAEA a
-     border against an #EBEBEB fill is invisible, and this product draws a
-     great many bordered panels on filled backgrounds. */
-  --paper: oklch(1 0 90); /* #FFFFFF */
-  --panel: oklch(0.9851 0 90); /* #FAFAFA */
-  --fill: oklch(0.9612 0 90); /* #F2F2F2 */
-  --fill-2: oklch(0.9401 0 90); /* #EBEBEB */
-  --line: oklch(0.9037 0 90); /* #DFDFDF */
-  --line-strong: oklch(0.709 0 90); /* #A1A1A1 */
-  --faint: oklch(0.65 0 90); /* #8F8F8F */
-  --mute: oklch(0.5103 0 90); /* #666666 */
-  --ink: oklch(0.2046 0 90); /* #171717 */
+     Monochrome. Every neutral, every affordance and both status tones are
+     greys; the single colour left in the product is the chart accent, which is
+     the one place a figure is coloured *in order to* be noticed.
 
-  /* Terracotta stays. It is not decoration: `--state-extracted` is this
-     colour, so every dotted "read off a photograph" figure is terracotta, and
-     so is the coverage-gap band — the single most valuable pixel in the
-     product (§6.4). Swapping it for Vercel blue would repaint the demo's
-     central signal. Held one step darker than before for contrast against a
-     pure-white paper. */
-  --accent: oklch(0.5367 0.1177 37.88); /* #A65238 terracotta */
-  --accent-hover: oklch(0.4766 0.1064 37.33); /* #8E442E */
-  --accent-soft: oklch(0.9429 0.0157 42.38); /* #F6E9E4 */
+     The accent is black, not terracotta. That is a deliberate reversal: the
+     product used to carry the extracted-field colour as its brand, and the
+     dotted underline was a second signal on top of it. With no colour, the
+     dotted underline *is* the signal — which it always was structurally
+     (`.fv-extracted` sets both), and it survives greyscale printing and
+     colour-blindness in a way a terracotta figure does not. */
+  --paper: oklch(1 0 0); /* #FFFFFF — cards, grids */
+  --panel: oklch(0.99 0 0); /* page background, popovers */
+  --fill: oklch(0.97 0 0); /* muted fills */
+  --fill-2: oklch(0.94 0 0); /* secondary, inputs, tracks */
+  --line: oklch(0.92 0 0); /* borders */
+  --line-strong: oklch(0.72 0 0); /* the un-emphasised half of a chart */
+  --faint: oklch(0.56 0 0); /* small supporting text */
+  --mute: oklch(0.44 0 0); /* secondary text */
+  --ink: oklch(0 0 0); /* #000000 — foreground */
 
-  /* Status colours pushed to Vercel's saturation: against neutral greys the
-     old muted sage and mustard read as dirty rather than as green and amber. */
-  --ok: oklch(0.5112 0.1374 149.4); /* #0F7B37 */
-  --ok-soft: oklch(0.9667 0.014 155.59); /* #EDF7F0 */
-  --warn: oklch(0.5221 0.1082 79.73); /* #8A6100 */
-  --warn-soft: oklch(0.9798 0.0248 89.21); /* #FFF8E6 */
+  /* "Accent" keeps its name because 106 usages and every `--state-*` point at
+     it; what changed is its value. Black on white is the strongest contrast
+     available, so an action reads as an action without needing a hue. */
+  --accent: oklch(0 0 0);
+  --accent-hover: oklch(0.25 0 0);
+  --accent-soft: oklch(0.94 0 0);
+
+  /* Status, in greys. `ok` and `warn` keep their names — 38 usages across 20
+     files point at them — but neither is a hue any more.
+
+     Nothing is lost, because in every one of those places the colour was the
+     second signal rather than the first: inflow and outflow are already told
+     apart by which side of the axis a bar sits on (§6.4), a superseded file is
+     already struck through, a caveat is already the only accented panel in the
+     AI column, and a stage stepper already fills its completed dots. `warn`
+     sits darker than `ok` so the two are still ordered when they meet. */
+  --ok: oklch(0.44 0 0); /* the settled, the complete */
+  --ok-soft: oklch(0.97 0 0);
+  --warn: oklch(0.25 0 0); /* the unsure, the superseded, the caveat */
+  --warn-soft: oklch(0.94 0 0);
+
+  /* — chart (§8.1 block 07) ————————————————
+     Block 07 draws two tones: the emphasised datum and everything else. The
+     amber `chart-1` is the one place a figure is coloured to be noticed,
+     which is what "the one worth noticing" in `Chart.tsx` means. */
+  --chart-1: oklch(0.81 0.17 75.35); /* emphasis */
+  --chart-2: oklch(0.55 0.22 264.53);
+  --chart-3: oklch(0.72 0 0); /* the rest */
+  --chart-4: oklch(0.92 0 0);
+  --chart-5: oklch(0.56 0 0);
 
   /* — semantic (what components actually reference) ————— */
   --background: var(--paper);
@@ -78,9 +106,15 @@
   --ring: var(--accent);
   --radius: 0.5rem;
 
-  /* — field states (spec §5.5) ————————————— */
+  /* — field states (spec §5.5) —————————————
+     Five states that must stay *distinguishable*, which is the constraint
+     monochrome makes tightest. Extracted is `--mute` rather than `--accent`:
+     if it were black it would be identical to confirmed except for the dotted
+     underline, and the 2:30 beat turns on spotting dotted figures at a glance
+     across a grid. Muted-plus-dotted reads as "less settled than the rest"
+     without needing a hue. */
   --state-confirmed: var(--ink);
-  --state-extracted: var(--accent);
+  --state-extracted: var(--mute);
   --state-inferred: var(--warn);
   --state-conflicting: var(--warn);
   --state-missing: var(--faint);
@@ -122,6 +156,11 @@
   --color-mute: var(--mute);
   --color-ink: var(--ink);
   --color-brand: var(--accent);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
   --color-brand-soft: var(--accent-soft);
   --color-ok: var(--ok);
   --color-ok-soft: var(--ok-soft);

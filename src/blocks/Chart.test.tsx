@@ -99,7 +99,9 @@ describe('the chart renders the closed type set — §7.4', () => {
 
   it('emphasises the largest bar only', () => {
     const html = renderToStaticMarkup(<Chart type="hbar" data={data} asShare />);
-    expect(html.match(/bg-brand"/g)).toHaveLength(1);
+    // `--chart-1` is the emphasis tone (§8.1) — the one place a figure is
+    // coloured in order to be noticed. Everything else is grey.
+    expect(html.match(/bg-chart-1/g)).toHaveLength(1);
   });
 
   it('offers click-through when a caller wants it — the only interaction', () => {

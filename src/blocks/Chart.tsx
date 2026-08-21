@@ -29,7 +29,7 @@ export type ChartDatum = {
   value: number;
   /** Shown at the end of the bar. Money must arrive pre-formatted. */
   display?: string;
-  /** Draws the bar in accent — the one worth noticing. */
+  /** Draws the bar in `--chart-1` — the one worth noticing (§8.1). */
   emphasis?: boolean;
   /** Carries the field state so an unconfirmed figure stays dotted here too. */
   field?: FieldValue<Paise>;
@@ -84,7 +84,7 @@ function HorizontalBars({
               <span
                 className={cn(
                   'block h-full rounded-full',
-                  datum.emphasis ? 'bg-brand' : 'bg-line-strong',
+                  datum.emphasis ? 'bg-chart-1' : 'bg-chart-3',
                 )}
                 style={{ width: `${width}%` }}
               />
@@ -142,7 +142,7 @@ function VerticalBars({
             <span
               key={datum.label}
               title={`${datum.label} · ${datum.display ?? datum.value}`}
-              className={cn('h-full', datum.emphasis ? 'bg-brand' : 'bg-line-strong')}
+              className={cn('h-full', datum.emphasis ? 'bg-chart-1' : 'bg-chart-3')}
               style={{
                 width: total > 0 ? `${(datum.value / total) * 100}%` : '0%',
                 opacity: datum.emphasis ? 1 : 0.35 + 0.5 * (datum.value / (peak || 1)),
@@ -174,7 +174,7 @@ function VerticalBars({
             title={datum.label}
             className={cn(
               'w-full rounded-t-sm',
-              datum.emphasis ? 'bg-brand' : 'bg-fill-2',
+              datum.emphasis ? 'bg-chart-1' : 'bg-chart-4',
               onDrillDown && 'cursor-pointer hover:opacity-80',
             )}
             style={{ height: peak > 0 ? `${Math.max(4, (datum.value / peak) * 90)}px` : 4 }}

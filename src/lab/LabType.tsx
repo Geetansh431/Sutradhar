@@ -8,7 +8,8 @@
  * is caught before it is adopted.
  *
  * To change the pairing: edit `--font-display` and `--font-ui` in
- * `src/styles/globals.css`. That is the whole change — two variables.
+ * `src/styles/globals.css`. That is the whole change — two variables. Both are
+ * Geist today, so display and UI are one family.
  *
  * The rupee test matters: not every font carries ₹ well. Check any candidate
  * against ₹18,40,000 at small sizes before adopting it.
@@ -165,20 +166,20 @@ export function LabTypeSpecimen() {
           The current pairing, against real content. Change it in{' '}
           <code className="rounded bg-fill px-1 text-[0.8em]">src/styles/globals.css</code> —{' '}
           <code className="rounded bg-fill px-1 text-[0.8em]">--font-display</code> and{' '}
-          <code className="rounded bg-fill px-1 text-[0.8em]">--font-ui</code>. Candidates worth
-          loading: Source Serif 4 (the default), Fraunces, Instrument Serif — each against Inter,
-          Geist, or Public Sans.
+          <code className="rounded bg-fill px-1 text-[0.8em]">--font-ui</code>. Both are Geist
+          today. A serif display face (Source Serif 4, Fraunces, Instrument Serif) is the
+          alternative if the answer figure should read as editorial rather than as interface.
         </p>
       </div>
 
       <div className="mb-6 flex flex-wrap gap-6 rounded-md border border-line bg-panel px-4 py-3 text-sm">
         <div>
           <span className="text-faint text-xs uppercase tracking-wide">Display</span>
-          <p className="font-display text-ink">Source Serif 4</p>
+          <p className="font-display text-ink">Geist</p>
         </div>
         <div>
           <span className="text-faint text-xs uppercase tracking-wide">UI</span>
-          <p className="text-ink">Inter</p>
+          <p className="text-ink">Geist</p>
         </div>
       </div>
 
