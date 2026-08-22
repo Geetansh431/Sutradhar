@@ -3,9 +3,10 @@
 
 /* ─────────────────────────────────────────────────────────────
    SUTRADHAR THEME
-   Monochrome: neutrals and chrome are greys, and the only colours are the two
-   status hues and the chart accent. The dotted underline, not a colour, is what
-   marks an extracted figure.
+   Dark, neutral gray by default — terracotta (#d97757) is the one accent,
+   used for actions and the chart datum worth noticing. The rail sits a step
+   darker than every other surface. The dotted underline still does the
+   work of marking an extracted figure, not colour.
    Type is Geist throughout, self-hosted. Swapping it is a one-line change —
    check any candidate on /lab/type against ₹18,40,000 first, since not every
    face carries ₹ well at small sizes.
@@ -34,85 +35,71 @@
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
 
   /* — raw palette ———————————————————————
-     Monochrome. Every neutral, every affordance and both status tones are
-     greys; the single colour left in the product is the chart accent, which is
-     the one place a figure is coloured *in order to* be noticed.
+     Neutral dark gray by default — no warm tint in the neutrals. Terracotta
+     is the single colour spent on purpose — actions, focus rings, and the
+     one chart datum worth noticing. Status tones stay achromatic: in every
+     place they appear the colour was already the second signal (which side
+     of the axis, struck-through, the one accented AI panel, a filled
+     stepper dot), so no hue is needed there. */
+  --rail: oklch(0.19 0 0); /* the nav — darker than every other surface */
+  --paper: oklch(0.24 0 0); /* cards, page-level surfaces */
+  --panel: oklch(0.28 0 0); /* popovers, raised surfaces */
+  --fill: oklch(0.16 0 0); /* muted fills */
+  --fill-2: oklch(0.34 0 0); /* secondary, inputs, tracks */
+  --line: oklch(0.32 0 0); /* borders */
+  --line-strong: oklch(0.62 0 0); /* the un-emphasised half of a chart */
+  --faint: oklch(0.62 0 0); /* small supporting text */
+  --mute: oklch(0.72 0 0); /* secondary text */
+  --ink: oklch(0.96 0 0); /* foreground */
 
-     The accent is black, not terracotta. That is a deliberate reversal: the
-     product used to carry the extracted-field colour as its brand, and the
-     dotted underline was a second signal on top of it. With no colour, the
-     dotted underline *is* the signal — which it always was structurally
-     (`.fv-extracted` sets both), and it survives greyscale printing and
-     colour-blindness in a way a terracotta figure does not. */
-  --paper: oklch(1 0 0); /* #FFFFFF — cards, grids */
-  --panel: oklch(0.99 0 0); /* page background, popovers */
-  --fill: oklch(0.97 0 0); /* muted fills */
-  --fill-2: oklch(0.94 0 0); /* secondary, inputs, tracks */
-  --line: oklch(0.92 0 0); /* borders */
-  --line-strong: oklch(0.72 0 0); /* the un-emphasised half of a chart */
-  --faint: oklch(0.56 0 0); /* small supporting text */
-  --mute: oklch(0.44 0 0); /* secondary text */
-  --ink: oklch(0 0 0); /* #000000 — foreground */
+  /* Terracotta accent — actions read as actions via colour, not just weight. */
+  --accent: oklch(0.6535 0.1284 41.1247); /* #d97757 */
+  --accent-hover: oklch(0.5601 0.1305 35.9349); /* #b05730 */
+  --accent-soft: oklch(0.14 0 0);
 
-  /* "Accent" keeps its name because 106 usages and every `--state-*` point at
-     it; what changed is its value. Black on white is the strongest contrast
-     available, so an action reads as an action without needing a hue. */
-  --accent: oklch(0 0 0);
-  --accent-hover: oklch(0.25 0 0);
-  --accent-soft: oklch(0.94 0 0);
-
-  /* Status, in greys. `ok` and `warn` keep their names — 38 usages across 20
-     files point at them — but neither is a hue any more.
-
-     Nothing is lost, because in every one of those places the colour was the
-     second signal rather than the first: inflow and outflow are already told
-     apart by which side of the axis a bar sits on (§6.4), a superseded file is
-     already struck through, a caveat is already the only accented panel in the
-     AI column, and a stage stepper already fills its completed dots. `warn`
-     sits darker than `ok` so the two are still ordered when they meet. */
-  --ok: oklch(0.44 0 0); /* the settled, the complete */
-  --ok-soft: oklch(0.97 0 0);
-  --warn: oklch(0.25 0 0); /* the unsure, the superseded, the caveat */
-  --warn-soft: oklch(0.94 0 0);
+  --ok: oklch(0.72 0 0); /* the settled, the complete */
+  --ok-soft: oklch(0.16 0 0);
+  --warn: oklch(0.62 0 0); /* the unsure, the superseded, the caveat */
+  --warn-soft: oklch(0.14 0 0);
 
   /* — chart (§8.1 block 07) ————————————————
      Block 07 draws two tones: the emphasised datum and everything else. The
-     amber `chart-1` is the one place a figure is coloured to be noticed,
+     terracotta `chart-1` is the one place a figure is coloured to be noticed,
      which is what "the one worth noticing" in `Chart.tsx` means. */
-  --chart-1: oklch(0.81 0.17 75.35); /* emphasis */
-  --chart-2: oklch(0.55 0.22 264.53);
-  --chart-3: oklch(0.72 0 0); /* the rest */
-  --chart-4: oklch(0.92 0 0);
-  --chart-5: oklch(0.56 0 0);
+  --chart-1: oklch(0.5601 0.1305 35.9349); /* #b05730 — emphasis */
+  --chart-2: oklch(0.7532 0.0997 292.5279); /* #9c87f5 */
+  --chart-3: oklch(0.14 0 0); /* the rest */
+  --chart-4: oklch(0.4 0 0);
+  --chart-5: oklch(0.5423 0.128 35.8462); /* #b4552d */
 
   /* — semantic (what components actually reference) ————— */
   --background: var(--paper);
-  --foreground: var(--ink);
+  --foreground: var(--mute);
   --card: var(--paper);
   --card-foreground: var(--ink);
-  --popover: var(--paper);
-  --popover-foreground: var(--ink);
+  --popover: var(--panel);
+  --popover-foreground: oklch(0.92 0 0);
   --primary: var(--accent);
-  --primary-foreground: var(--paper);
-  --secondary: var(--fill);
-  --secondary-foreground: var(--ink);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.98 0 0);
+  --secondary-foreground: oklch(0.22 0 0);
   --muted: var(--fill);
-  --muted-foreground: var(--mute);
+  --muted-foreground: var(--faint);
   --accent-bg: var(--accent-soft);
-  --accent-foreground: var(--accent);
-  --destructive: var(--accent);
+  --accent-foreground: var(--ink);
+  --destructive: oklch(0.6392 0.2076 25.3313); /* #ef4444 */
+  --destructive-foreground: oklch(1 0 0);
   --border: var(--line);
-  --input: var(--line);
+  --input: var(--fill-2);
   --ring: var(--accent);
   --radius: 0.5rem;
 
   /* — field states (spec §5.5) —————————————
-     Five states that must stay *distinguishable*, which is the constraint
-     monochrome makes tightest. Extracted is `--mute` rather than `--accent`:
-     if it were black it would be identical to confirmed except for the dotted
-     underline, and the 2:30 beat turns on spotting dotted figures at a glance
-     across a grid. Muted-plus-dotted reads as "less settled than the rest"
-     without needing a hue. */
+     Five states that must stay *distinguishable*. Extracted is `--mute`
+     rather than `--ink` or `--accent`: the 2:30 beat turns on spotting
+     dotted figures at a glance across a grid, and the accent colour is
+     reserved for actions, not field state. Muted-plus-dotted reads as
+     "less settled than the rest" on its own. */
   --state-confirmed: var(--ink);
   --state-extracted: var(--mute);
   --state-inferred: var(--warn);
@@ -142,10 +129,12 @@
   --color-accent: var(--accent-bg);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
 
+  --color-rail: var(--rail);
   --color-paper: var(--paper);
   --color-panel: var(--panel);
   --color-fill: var(--fill);

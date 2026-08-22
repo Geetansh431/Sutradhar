@@ -40,7 +40,7 @@ export function Rail({
   return (
     <nav
       aria-label="Main"
-      className="flex h-dvh w-56 shrink-0 flex-col border-line border-r bg-panel"
+      className="flex h-dvh w-56 shrink-0 flex-col border-line border-r bg-rail"
     >
       <div className="px-4 py-4">
         <span className="font-display font-semibold text-brand text-lg">sutradhar</span>
